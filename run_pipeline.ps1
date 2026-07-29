@@ -26,6 +26,7 @@ if (-not $SkipTraining) {
 
 Invoke-ProjectPython @("src\generate_executive_report.py")
 Invoke-ProjectPython @("src\validate_project.py")
+Invoke-ProjectPython @("src\package_streamlit_deployment.py")
 
 if ($LoadMySQL) {
     Invoke-ProjectPython @("src\load_mysql.py", "--truncate")

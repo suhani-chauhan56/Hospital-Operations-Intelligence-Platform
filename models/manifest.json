@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "generated_at_utc": "2026-07-28T14:18:39.717217+00:00",
+  "dataset": {
+    "path": "datasets\\processed\\model_features.csv",
+    "sha256": "cb3515c64631f6530b765e5f65a99dbfc8b67bf6d97b6c0cec26b17a22349312",
+    "rows": 120000
+  },
+  "random_state": 42,
+  "artifacts": {
+    "readmission": {
+      "artifact": "readmission.pkl",
+      "sha256": "66ce095037624e89a4a5c89bdd7dc3b1c2ebb77d1adaa2cff7a612fc16e23113",
+      "selected_model": "logistic",
+      "primary_metric": "roc_auc",
+      "primary_metric_value": 0.7358779093529115,
+      "features": [
+        "los_days",
+        "num_procedures",
+        "charlson_index",
+        "hba1c",
+        "creatinine",
+        "haemoglobin",
+        "systolic_bp",
+        "previous_admissions",
+        "readmission_history",
+        "disease_severity_score",
+        "lab_abnormality_score",
+        "patient_complexity_index",
+        "admit_type",
+        "ward_type",
+        "season"
+      ],
+      "split_strategy": "GroupShuffleSplit(patient_id)",
+      "train_rows": 24032,
+      "test_rows": 5968,
+      "train_patients": 20353,
+      "test_patients": 5089,
+      "patient_overlap": 0,
+      "target_origin": "observed",
+      "portfolio_tier": "core_analytical",
+      "decision_use": "screening_research_only"
+    },
+    "waiting_simulation": {
+      "artifact": "waiting.pkl",
+      "sha256": "62c50f862edba1dc1097d79077f18135e762b612c3c6d1a7544fe807393062dd",
+      "selected_model": "random_forest",
+      "primary_metric": "RMSE",
+      "primary_metric_value": 0.07390335178493618,
+      "features": [
+        "charlson_index",
+        "previous_admissions",
+        "department_load",
+        "is_weekend_admission",
+        "admit_type",
+        "ward_type",
+        "season"
+      ],
+      "split_strategy": "GroupShuffleSplit(patient_id)",
+      "train_rows": 24032,
+      "test_rows": 5968,
+      "train_patients": 20353,
+      "test_patients": 5089,
+      "patient_overlap": 0,
+      "target_origin": "simulated_formula",
+      "portfolio_tier": "sandbox",
+      "decision_use": "pipeline_demonstration"
+    },
+    "revenue_scenario": {
+      "artifact": "revenue.pkl",
+      "sha256": "b390fc39926ce05c2a25ac6f36e962b6bfe57c6f7249233f140cd480a6998d45",
+      "selected_model": "catboost",
+      "primary_metric": "RMSE",
+      "primary_metric_value": 2890.7874384806514,
+      "features": [
+        "los_days",
+        "num_procedures",
+        "charlson_index",
+        "hba1c",
+        "creatinine",
+        "haemoglobin",
+        "systolic_bp",
+        "previous_admissions",
+        "disease_severity_score",
+        "lab_abnormality_score",
+        "medicine_count",
+        "patient_complexity_index",
+        "admit_type",
+        "ward_type",
+        "season"
+      ],
+      "split_strategy": "GroupShuffleSplit(patient_id)",
+      "train_rows": 24032,
+      "test_rows": 5968,
+      "train_patients": 20353,
+      "test_patients": 5089,
+      "patient_overlap": 0,
+      "target_origin": "mixed_surrogate_and_simulated",
+      "portfolio_tier": "sandbox",
+      "decision_use": "scenario_demonstration"
+    },
+    "occupancy": {
+      "artifact": "occupancy.pkl",
+      "sha256": "56ee23776c3b8cf3993cc74d7821df0293fa910fce2facda521a966d4746a65f",
+      "selected_model": "XGBRegressor",
+      "primary_metric": "MAE_beds",
+      "primary_metric_value": 6.375323616101091,
+      "features": [
+        "dayofweek",
+        "month",
+        "is_weekend",
+        "lag_1_beds",
+        "lag_7_beds",
+        "rolling_7_beds"
+      ],
+      "split_strategy": "chronological_80_20",
+      "target_origin": "observed_active_census",
+      "portfolio_tier": "core_analytical",
+      "decision_use": "capacity_scenario"
+    }
+  },
+  "explanations": {
+    "readmission": {
+      "model_sha256": "66ce095037624e89a4a5c89bdd7dc3b1c2ebb77d1adaa2cff7a612fc16e23113",
+      "report": "readmission_shap_importance.csv",
+      "report_sha256": "8b97c7f5ab69340fcd0b9e41991342b7c1d956667b5fc9aaf54091270a18f6be"
+    },
+    "revenue_scenario": {
+      "model_sha256": "b390fc39926ce05c2a25ac6f36e962b6bfe57c6f7249233f140cd480a6998d45",
+      "report": "revenue_shap_importance.csv",
+      "report_sha256": "0e32190cc74a968422df37fbe581b9d8b7af98de79525deb1c7f6d3f4d16d88c"
+    }
+  }
+}

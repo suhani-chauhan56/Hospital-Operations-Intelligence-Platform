@@ -1,0 +1,21 @@
+{
+  "status": "incomplete",
+  "verified_at_utc": "2026-07-28T13:58:05.811779+00:00",
+  "database": "hospital_ops",
+  "mysql_version": "8.0.46",
+  "tables_verified": 13,
+  "views_verified": 0,
+  "missing_tables": [],
+  "missing_views": [
+    "billing_claims",
+    "vw_bed_occupancy",
+    "vw_department_kpis",
+    "vw_doctor_utilization",
+    "vw_executive_kpis",
+    "vw_monthly_revenue",
+    "vw_patient_360"
+  ],
+  "evidence_generated": true,
+  "table_counts_report": "reports\\mysql_table_counts.csv",
+  "query_evidence_report": "reports\\mysql_query_evidence.csv"
+}

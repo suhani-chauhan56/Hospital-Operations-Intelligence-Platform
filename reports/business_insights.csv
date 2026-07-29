@@ -1,0 +1,6 @@
+area,reliability,decision_use,insight
+Patient outcomes,Observed,Prioritize ward-level discharge review.,ICU has the highest observed ward readmission rate at 23.8%.
+Hospital flow,Observed,Use for site-level capacity and staffing review.,"a86650ea-3517-4285-bc11-ffa2085a8df2 records the highest admission volume with 3,736 encounters."
+Claims,Observed,Focus denial management on payer-specific gaps.,"Medicaid has the largest observed billed-to-paid gap at 5,838,924."
+Waiting scenario,Simulated,Demonstrates queue-model workflow only; replace with timestamp data.,ICU has the highest simulated average wait at 52.1 minutes.
+Risk,Derived from observed clinical fields,"Use as a screening segment, not a causal conclusion.",Patients in the top complexity quartile have a 21.3% readmission rate.

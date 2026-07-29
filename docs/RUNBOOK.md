@@ -162,7 +162,27 @@ powerbi/measures.dax
 powerbi/hospital_operations_theme.json
 ```
 
-## 8. Main Outputs
+## 8. Streamlit Community Cloud
+
+Build the deployment bundle:
+
+```powershell
+python src\package_streamlit_deployment.py
+```
+
+Commit the generated `.csv.gz` tables, registered models, manifest, and required
+reports allowed by `.gitignore`. In Streamlit Community Cloud, select:
+
+```text
+Main file path: streamlit/app.py
+Data source: CSV (default)
+```
+
+After pushing a refreshed bundle, reboot the app from **Manage app**. The cloud
+application uses the same processed data, registered models, model hashes, and
+reports as the validated local application.
+
+## 9. Main Outputs
 
 ```text
 excel/raw_validation_report.xlsx
@@ -175,7 +195,7 @@ reports/occupancy_forecast_daily.csv
 reports/validation_summary.json
 ```
 
-## 9. Common Issues
+## 10. Common Issues
 
 ### PowerShell activation blocked
 

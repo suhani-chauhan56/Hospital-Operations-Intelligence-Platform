@@ -340,10 +340,15 @@ def database_engine():
 def load_table(name: str) -> pd.DataFrame:
     if requested_data_source() == "mysql":
         return pd.read_sql_table(name, database_engine())
-    path = DATA / f"{name}.csv"
-    if not path.exists():
-        raise FileNotFoundError(f"Required processed table is missing: {path}")
-    return pd.read_csv(path)
+    candidates = [DATA / f"{name}.csv.gz", DATA / f"{name}.csv"]
+    for path in candidates:
+        if path.exists():
+            return pd.read_csv(path)
+    expected = " or ".join(str(path) for path in candidates)
+    raise FileNotFoundError(
+        f"Required processed table is missing: {expected}. "
+        "Run the pipeline locally and commit the compressed deployment tables."
+    )
 
 
 @st.cache_data(show_spinner=False)
