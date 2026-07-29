@@ -1,0 +1,39 @@
+{
+  "project_name": "Hospital Operations Intelligence Platform",
+  "random_state": 42,
+  "model_sample_rows": 30000,
+  "bed_capacity": 500,
+  "high_risk_threshold": 0.65,
+  "executive_monitoring_thresholds": {
+    "readmission_rate": 0.1,
+    "claim_collection_rate": 0.7,
+    "occupancy_min": 0.75,
+    "occupancy_max": 0.85
+  },
+  "default_data_source": "csv",
+  "data_classification": "portfolio_simulation",
+  "observed_dimensions": [
+    "hospital_id",
+    "ward_type",
+    "admit_type",
+    "admit_date",
+    "discharge_date",
+    "clinical_labs",
+    "procedures",
+    "readmission",
+    "claim_provider",
+    "claim_status",
+    "billed_amount",
+    "paid_amount"
+  ],
+  "derived_dimensions": [
+    "department",
+    "doctor_id",
+    "age",
+    "gender",
+    "medicine_code",
+    "appointment",
+    "waiting_time",
+    "admission_claim_link"
+  ]
+}

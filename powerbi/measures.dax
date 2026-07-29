@@ -1,0 +1,27 @@
+// Core operational measures
+Admissions = DISTINCTCOUNT(admissions[admission_id])
+Patients = DISTINCTCOUNT(admissions[patient_id])
+Readmission Rate = AVERAGE(admissions[readmitted_30d])
+Average LOS = AVERAGE(admissions[los_days])
+Average Wait = AVERAGE(admissions[waiting_time_minutes])
+
+// Finance and claims
+Paid Revenue = SUM(billing[paid_amount])
+Billed Revenue = SUM(billing[billed_amount])
+Revenue Leakage = SUM(billing[claim_gap])
+Claim Approval Ratio = AVERAGE(claims[claim_approved])
+Revenue Per Patient = DIVIDE([Paid Revenue], [Patients])
+
+// Workload and capacity
+Admissions Per Doctor = DIVIDE([Admissions], DISTINCTCOUNT(doctors[doctor_id]))
+Weekend Admissions =
+    CALCULATE([Admissions], WEEKDAY(admissions[admit_date], 2) >= 6)
+Weekend Admission Rate = DIVIDE([Weekend Admissions], [Admissions])
+
+// Time intelligence
+Prior Month Revenue =
+    CALCULATE([Paid Revenue], DATEADD('Calendar'[Date], -1, MONTH))
+Monthly Revenue Growth =
+    DIVIDE([Paid Revenue] - [Prior Month Revenue], [Prior Month Revenue])
+Admissions 30D =
+    CALCULATE([Admissions], DATESINPERIOD('Calendar'[Date], MAX('Calendar'[Date]), -30, DAY))

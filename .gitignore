@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+.env
+archive/
+
+# Large/generated artifacts are rebuilt by run_pipeline.ps1.
+datasets/interim/
+datasets/processed/
+models/*.pkl
+models/manifest.json
+models/experiments/
+reports/*.csv
+reports/*.json
+reports/*.pdf
+reports/*.log
+reports/experiments/
+excel/*.xlsx
+
+# Keep raw data out of source control unless governance explicitly allows it.
+datasets/raw/*.csv
