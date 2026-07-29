@@ -47,7 +47,7 @@ END
 /
 
 CREATE TRIGGER trg_billing_gap_before_update
-BEFORE UPDATE ON billing
+BEFORE UPDATE ON billing 
 FOR EACH ROW
 BEGIN
     SET NEW.claim_gap = GREATEST(NEW.billed_amount - NEW.paid_amount, 0);
