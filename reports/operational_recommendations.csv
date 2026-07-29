@@ -1,0 +1,4 @@
+priority,title,signal,action,owner,timeframe,success_measure,reliability
+P1,Readmission control,11.8% hospital-wide readmission,Prioritize ICU discharge review and post-discharge follow-up.,Clinical Quality Lead,30 days,Root-cause review completed and approved ward target set,observed
+P1,Collection recovery,64.5% of billed value collected,Review payer-specific billed-to-paid gaps and aged claims.,Revenue Cycle Manager,30 days,Collection rate monitored against illustrative 70% threshold,observed
+P2,Queue-data readiness,50 minute simulated emergency wait,"Capture arrival, triage, and service-start timestamps before staffing optimization.",Operations Data Owner,60 days,Observed queue timestamps pass completeness checks,simulated_workflow_measure

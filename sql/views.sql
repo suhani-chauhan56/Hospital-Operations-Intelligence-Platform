@@ -13,6 +13,61 @@ FROM admissions a
 LEFT JOIN billing b ON a.admission_id = b.admission_id
 LEFT JOIN claims c ON b.billing_id = c.billing_id;
 
+CREATE OR REPLACE VIEW vw_command_center AS
+SELECT
+    c.as_of_date,
+    c.patients_today,
+    c.occupancy_pct,
+    c.occupied_beds,
+    c.emergency_wait_minutes,
+    c.critical_patients,
+    c.doctor_utilization_pct,
+    c.hospital_efficiency_score,
+    c.capacity_assumption,
+    f.forecast_start_date,
+    f.forecast_end_date,
+    f.emergency_patients AS next_week_emergency_patients,
+    f.emergency_growth_pct,
+    f.additional_beds,
+    f.peak_day,
+    f.peak_day_volume,
+    f.peak_hour_status
+FROM command_center_kpis c
+CROSS JOIN operational_forecast_summary f;
+
+CREATE OR REPLACE VIEW vw_efficiency_ranking AS
+SELECT
+    scope_type,
+    scope_name,
+    efficiency_score,
+    patient_outcome_score,
+    collection_score,
+    capacity_balance_score,
+    patient_flow_score,
+    provenance,
+    DENSE_RANK() OVER (
+        PARTITION BY scope_type
+        ORDER BY efficiency_score DESC
+    ) AS efficiency_rank
+FROM hospital_efficiency_scores;
+
+CREATE OR REPLACE VIEW vw_operational_action_queue AS
+SELECT
+    priority,
+    title,
+    signal,
+    action,
+    owner,
+    timeframe,
+    success_measure,
+    reliability,
+    CASE priority
+        WHEN 'P1' THEN 1
+        WHEN 'P2' THEN 2
+        ELSE 3
+    END AS priority_order
+FROM operational_recommendations;
+
 CREATE OR REPLACE VIEW vw_department_kpis AS
 SELECT
     d.department,
@@ -63,20 +118,39 @@ LEFT JOIN claims c ON b.billing_id = c.billing_id
 GROUP BY DATE_FORMAT(b.claim_billing_date, '%Y-%m-01'), i.insurance_provider;
 
 CREATE OR REPLACE VIEW vw_daily_occupancy AS
-WITH daily AS (
-    SELECT admit_date, COUNT(*) AS admissions, SUM(los_days) AS occupied_bed_days
+WITH calendar AS (
+    SELECT DISTINCT admit_date AS census_date
     FROM admissions
-    GROUP BY admit_date
+),
+census AS (
+    SELECT
+        c.census_date,
+        (
+            SELECT COUNT(*)
+            FROM admissions a
+            WHERE a.admit_date = c.census_date
+        ) AS admissions,
+        (
+            SELECT COUNT(*)
+            FROM admissions a
+            WHERE a.admit_date <= c.census_date
+              AND COALESCE(a.discharge_date, c.census_date) >= c.census_date
+        ) AS occupied_beds
+    FROM calendar c
 )
 SELECT
-    admit_date,
+    census_date AS admit_date,
     admissions,
-    occupied_bed_days,
-    LEAST(100, occupied_bed_days / 95 * 100) AS occupancy_pct,
-    AVG(occupied_bed_days) OVER (
-        ORDER BY admit_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
-    ) AS occupied_bed_days_7d_avg
-FROM daily;
+    occupied_beds,
+    LEAST(100, occupied_beds / 500 * 100) AS occupancy_pct,
+    AVG(occupied_beds) OVER (
+        ORDER BY census_date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+    ) AS occupied_beds_7d_avg
+FROM census;
+
+CREATE OR REPLACE VIEW vw_bed_occupancy AS
+SELECT *
+FROM vw_daily_occupancy;
 
 CREATE OR REPLACE VIEW vw_patient_360 AS
 SELECT

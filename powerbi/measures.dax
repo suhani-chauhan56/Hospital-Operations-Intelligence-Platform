@@ -25,3 +25,29 @@ Monthly Revenue Growth =
     DIVIDE([Paid Revenue] - [Prior Month Revenue], [Prior Month Revenue])
 Admissions 30D =
     CALCULATE([Admissions], DATESINPERIOD('Calendar'[Date], MAX('Calendar'[Date]), -30, DAY))
+
+// Governed command-center analytical marts
+Patients Today = MAX(command_center_kpis[patients_today])
+Current Occupancy % = DIVIDE(MAX(command_center_kpis[occupancy_pct]), 100)
+Occupied Beds = MAX(command_center_kpis[occupied_beds])
+Emergency Wait = MAX(command_center_kpis[emergency_wait_minutes])
+Critical Patients = MAX(command_center_kpis[critical_patients])
+Doctor Utilization % =
+    DIVIDE(MAX(command_center_kpis[doctor_utilization_pct]), 100)
+Hospital Efficiency Score =
+    MAX(command_center_kpis[hospital_efficiency_score])
+
+Next Week Emergency Patients =
+    MAX(operational_forecast_summary[emergency_patients])
+Emergency Growth % =
+    DIVIDE(MAX(operational_forecast_summary[emergency_growth_pct]), 100)
+Additional Beds Required =
+    MAX(operational_forecast_summary[additional_beds])
+Peak Forecast Day =
+    SELECTEDVALUE(operational_forecast_summary[peak_day])
+
+Department Efficiency Score =
+    CALCULATE(
+        MAX(hospital_efficiency_scores[efficiency_score]),
+        hospital_efficiency_scores[scope_type] = "department"
+    )

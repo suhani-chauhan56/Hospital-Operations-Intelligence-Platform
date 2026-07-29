@@ -1,0 +1,2 @@
+as_of_date,patients_today,occupancy_pct,occupied_beds,emergency_wait_minutes,critical_patients,doctor_utilization_pct,hospital_efficiency_score,capacity_assumption,snapshot_provenance
+2024-12-30,36,52.6,263,50.36842105263158,14,75.0,76.28190597461018,500,observed_latest_date_with_derived_and_simulated_metrics

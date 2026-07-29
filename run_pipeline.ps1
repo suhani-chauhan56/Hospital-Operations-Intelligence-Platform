@@ -24,6 +24,7 @@ if (-not $SkipTraining) {
     Invoke-ProjectPython @("src\shap_explainability.py")
 }
 
+Invoke-ProjectPython @("src\operational_intelligence.py")
 Invoke-ProjectPython @("src\generate_executive_report.py")
 Invoke-ProjectPython @("src\validate_project.py")
 Invoke-ProjectPython @("src\package_streamlit_deployment.py")

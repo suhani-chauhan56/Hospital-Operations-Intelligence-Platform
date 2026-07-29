@@ -141,6 +141,61 @@ CREATE TABLE appointments (
         FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
+CREATE TABLE command_center_kpis (
+    as_of_date DATE PRIMARY KEY,
+    patients_today INT NOT NULL,
+    occupancy_pct DECIMAL(8,3) NOT NULL,
+    occupied_beds INT NOT NULL,
+    emergency_wait_minutes DECIMAL(8,3),
+    critical_patients INT NOT NULL,
+    doctor_utilization_pct DECIMAL(8,3),
+    hospital_efficiency_score DECIMAL(8,3) NOT NULL,
+    capacity_assumption INT NOT NULL,
+    snapshot_provenance VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE hospital_efficiency_scores (
+    scope_type VARCHAR(24) NOT NULL,
+    scope_name VARCHAR(80) NOT NULL,
+    efficiency_score DECIMAL(8,3) NOT NULL,
+    patient_outcome_score DECIMAL(8,3),
+    collection_score DECIMAL(8,3),
+    capacity_balance_score DECIMAL(8,3),
+    patient_flow_score DECIMAL(8,3),
+    provenance VARCHAR(120) NOT NULL,
+    PRIMARY KEY (scope_type, scope_name)
+);
+
+CREATE TABLE emergency_forecast (
+    forecast_date DATE PRIMARY KEY,
+    forecast_emergency_patients DECIMAL(10,3) NOT NULL,
+    method VARCHAR(120) NOT NULL,
+    provenance VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE operational_forecast_summary (
+    forecast_start_date DATE PRIMARY KEY,
+    forecast_end_date DATE NOT NULL,
+    emergency_patients INT NOT NULL,
+    emergency_growth_pct DECIMAL(10,3),
+    additional_beds INT NOT NULL,
+    peak_day VARCHAR(16) NOT NULL,
+    peak_day_volume INT NOT NULL,
+    method VARCHAR(160) NOT NULL,
+    peak_hour_status VARCHAR(80) NOT NULL
+);
+
+CREATE TABLE operational_recommendations (
+    priority VARCHAR(8) NOT NULL,
+    title VARCHAR(80) PRIMARY KEY,
+    signal VARCHAR(160) NOT NULL,
+    action VARCHAR(320) NOT NULL,
+    owner VARCHAR(80) NOT NULL,
+    timeframe VARCHAR(32) NOT NULL,
+    success_measure VARCHAR(240) NOT NULL,
+    reliability VARCHAR(80) NOT NULL
+);
+
 CREATE INDEX idx_admissions_patient_date ON admissions(patient_id, admit_date);
 CREATE INDEX idx_admissions_department_date ON admissions(department_id, admit_date);
 CREATE INDEX idx_admissions_doctor ON admissions(doctor_id);
@@ -150,3 +205,7 @@ CREATE INDEX idx_billing_admission ON billing(admission_id);
 CREATE INDEX idx_claim_status ON claims(claim_status);
 CREATE INDEX idx_claim_insurance ON claims(insurance_id);
 CREATE INDEX idx_appointments_doctor_date ON appointments(doctor_id, admit_date);
+CREATE INDEX idx_efficiency_scope_score
+    ON hospital_efficiency_scores(scope_type, efficiency_score);
+CREATE INDEX idx_recommendations_priority
+    ON operational_recommendations(priority);

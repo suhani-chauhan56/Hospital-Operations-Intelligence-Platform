@@ -7,7 +7,8 @@
 | `data_pipeline.py` | `datasets/raw/*.csv`, config | interim, processed, Excel, KPI reports | Stable keys, normalized tables, provenance |
 | `train_models.py` | processed features, config | four models, metrics, forecasts, manifest | Group/chronological holdouts and artifact hashes |
 | `shap_explainability.py` | registered models and features | SHAP CSV/PDF, updated manifest | Explanation model hash must match deployment model |
-| `generate_executive_report.py` | governed KPI and insight files | executive PDF | Observed views lead; insight reliability is visible |
+| `operational_intelligence.py` | processed features, billing, occupied-bed forecast, config | command-center, efficiency, emergency forecast, outlook, recommendations | One governed analytical-mart source for every delivery layer |
+| `generate_executive_report.py` | governed KPI, mart, and insight files | five-page executive PDF | Observed views lead; insight reliability is visible |
 | `validate_project.py` | all production outputs | validation summary | Fails closed on relational or lineage defects |
 | `load_mysql.py` | processed warehouse tables | MySQL tables | FK-order load and source/target row-count checks |
 | `verify_mysql_deployment.py` | populated MySQL warehouse | status, table-count and KPI evidence reports | Database version, schema objects and exact query results |
@@ -32,7 +33,8 @@ the database is unavailable rather than switching to CSV.
 ## Deployment Sequence
 
 ```text
-ETL -> model evaluation/refit -> SHAP -> executive report -> validation
+ETL -> model evaluation/refit -> SHAP -> operational marts
+    -> executive report -> validation
     -> optional MySQL load -> Streamlit/Power BI
 ```
 

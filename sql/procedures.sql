@@ -1,9 +1,18 @@
 USE hospital_ops;
 
-DELIMITER /
-/
+DROP PROCEDURE IF EXISTS sp_monthly_operations_report;
+DROP PROCEDURE IF EXISTS sp_patient_360;
+DROP PROCEDURE IF EXISTS sp_command_center_report;
+DROP TRIGGER IF EXISTS trg_billing_gap_before_insert;
+DROP TRIGGER IF EXISTS trg_billing_gap_before_update;
+DROP TRIGGER IF EXISTS trg_claim_approval_before_insert;
 
-CREATE PROCEDURE sp_monthly_operations_report(IN report_year INT, IN report_month INT)
+DELIMITER $$
+
+CREATE PROCEDURE sp_monthly_operations_report(
+    IN report_year INT,
+    IN report_month INT
+)
 BEGIN
     SELECT
         d.department,
@@ -19,9 +28,7 @@ BEGIN
       AND MONTH(a.admit_date) = report_month
     GROUP BY d.department
     ORDER BY revenue DESC;
-END
-/
-/
+END$$
 
 CREATE PROCEDURE sp_patient_360(IN p_patient_id VARCHAR(64))
 BEGIN
@@ -29,39 +36,47 @@ BEGIN
     FROM vw_patient_360
     WHERE patient_id = p_patient_id
     ORDER BY admit_date DESC;
-END
-/
-/
+END$$
 
-USE hospital_ops;
-
-SELECT DATABASE();
+CREATE PROCEDURE sp_command_center_report()
+BEGIN
+    SELECT * FROM vw_command_center;
+    SELECT *
+    FROM vw_efficiency_ranking
+    ORDER BY scope_type, efficiency_rank;
+    SELECT *
+    FROM vw_operational_action_queue
+    ORDER BY priority_order, title;
+END$$
 
 CREATE TRIGGER trg_billing_gap_before_insert
 BEFORE INSERT ON billing
 FOR EACH ROW
 BEGIN
-    SET NEW.claim_gap = GREATEST(NEW.billed_amount - NEW.paid_amount, 0);
-END
-/
-/
+    SET NEW.claim_gap = GREATEST(
+        NEW.billed_amount - NEW.paid_amount,
+        0
+    );
+END$$
 
 CREATE TRIGGER trg_billing_gap_before_update
-BEFORE UPDATE ON billing 
+BEFORE UPDATE ON billing
 FOR EACH ROW
 BEGIN
-    SET NEW.claim_gap = GREATEST(NEW.billed_amount - NEW.paid_amount, 0);
-END
-/
-/
+    SET NEW.claim_gap = GREATEST(
+        NEW.billed_amount - NEW.paid_amount,
+        0
+    );
+END$$
 
 CREATE TRIGGER trg_claim_approval_before_insert
 BEFORE INSERT ON claims
 FOR EACH ROW
 BEGIN
-    SET NEW.claim_approved = CASE WHEN NEW.claim_status = 'Paid' THEN 1 ELSE 0 END;
-END
-/
-/
+    SET NEW.claim_approved = CASE
+        WHEN NEW.claim_status = 'Paid' THEN 1
+        ELSE 0
+    END;
+END$$
 
-DELIMITER;
+DELIMITER ;

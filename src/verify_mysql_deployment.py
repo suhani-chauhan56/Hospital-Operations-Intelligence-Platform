@@ -29,13 +29,21 @@ EXPECTED_TABLES = [
     "claims",
     "appointments",
     "model_features",
+    "command_center_kpis",
+    "hospital_efficiency_scores",
+    "emergency_forecast",
+    "operational_forecast_summary",
+    "operational_recommendations",
 ]
 EXPECTED_VIEWS = [
     "vw_executive_kpis",
+    "vw_command_center",
     "vw_department_kpis",
     "vw_doctor_utilization",
     "vw_monthly_revenue",
     "vw_bed_occupancy",
+    "vw_efficiency_ranking",
+    "vw_operational_action_queue",
     "vw_patient_360",
     "billing_claims",
 ]
@@ -102,6 +110,14 @@ def main() -> None:
                 "Average LOS": "SELECT AVG(los_days) FROM admissions",
                 "Paid revenue": "SELECT SUM(paid_amount) FROM billing",
                 "Claim approval ratio": "SELECT AVG(claim_approved) FROM claims",
+                "Hospital efficiency score": (
+                    "SELECT hospital_efficiency_score "
+                    "FROM command_center_kpis LIMIT 1"
+                ),
+                "Next-week emergency patients": (
+                    "SELECT emergency_patients "
+                    "FROM operational_forecast_summary LIMIT 1"
+                ),
             }
             evidence = [
                 {

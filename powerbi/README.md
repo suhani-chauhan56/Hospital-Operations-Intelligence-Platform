@@ -23,18 +23,29 @@ labs, appointments, and billing through `admission_id`. Relate claims to billing
 through `billing_id` and insurance to billing/claims through `insurance_id`.
 Create a calendar table and mark it as the date table.
 
+Import the governed analytical marts for the command-center pages:
+
+- `command_center_kpis`
+- `hospital_efficiency_scores`
+- `emergency_forecast`
+- `operational_forecast_summary`
+- `operational_recommendations`
+
 ## Report Pages
 
-1. **Executive:** admissions, patients, readmission, LOS, occupancy, claims,
+1. **Command Center:** latest observed-day patients, occupied beds, emergency
+   wait provenance, critical cohort, doctor workload index, efficiency score,
+   next-week outlook, and accountable recommendations.
+2. **Executive:** admissions, patients, readmission, LOS, occupancy, claims,
    revenue, monthly trends, and management alerts.
-2. **Department:** ranking, patients, revenue, success rate, LOS, waiting time,
+3. **Department:** ranking, patients, revenue, success rate, LOS, waiting time,
    and readmission.
-3. **Doctor:** patient count, consultations, workload percentile, revenue,
+4. **Doctor:** patient count, consultations, workload percentile, revenue,
    utilization, and readmission.
-4. **Patient:** timeline, history, medicines, labs, billing, claims, and risk.
-5. **Finance:** billed and paid revenue, claim gaps, approval, insurer,
+5. **Patient:** timeline, history, medicines, labs, billing, claims, and risk.
+6. **Finance:** billed and paid revenue, claim gaps, approval, insurer,
    expenses/proxy costs, and profit/proxy margin.
-6. **Operations:** wait, occupancy, admissions, discharge, patient flow,
+7. **Operations:** wait, occupancy, admissions, discharge, patient flow,
    weekends, and 7/30/90-day forecasts.
 
 ## Core DAX
@@ -67,3 +78,8 @@ type, ward, insurer, payment method, and claim status.
 Use `reports/occupancy_forecast_daily.csv` for the forecast visual,
 `reports/business_insights.csv` for management callouts, and the SHAP CSV files
 for feature-importance charts.
+
+Use `reports/emergency_forecast.csv` for the seven-day emergency trend,
+`reports/hospital_efficiency_scores.csv` for the score decomposition, and
+`reports/operational_recommendations.csv` for the owner/timeframe action table.
+Do not display a peak-hour forecast until arrival timestamps are available.

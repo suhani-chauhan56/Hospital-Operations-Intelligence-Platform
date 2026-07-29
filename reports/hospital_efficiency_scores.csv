@@ -1,0 +1,10 @@
+scope_type,scope_name,efficiency_score,patient_outcome_score,collection_score,capacity_balance_score,patient_flow_score,provenance
+hospital,Hospital portfolio,76.28190597461018,87.72222222222223,92.17415880425611,45.2,45.007694444444446,mixed_observed_derived_simulated_assumed
+department,Cardiology,78.59267383895929,88.36206896551724,,93.14735995146722,44.49919747333541,derived_portfolio_dimension
+department,Emergency,73.81707169143709,89.01572603177137,,70.15373419929196,47.08310050291371,derived_portfolio_dimension
+department,General Medicine,77.23835034556737,87.81317459279126,,88.3827640215491,44.94428817513791,derived_portfolio_dimension
+department,Neurology,73.7048209815911,87.71707975046367,,72.56605700191841,46.81906742351861,derived_portfolio_dimension
+department,Oncology,79.71882717689738,88.43153526970954,,98.17790591060167,43.834332257568775,derived_portfolio_dimension
+department,Orthopedics,71.40695162162739,86.70559173590837,,63.89551614541617,48.32110686927664,derived_portfolio_dimension
+department,Pediatrics,79.35031676914335,88.54684619252473,,96.38774056050482,43.91983413101912,derived_portfolio_dimension
+department,Surgery,79.89365227012962,88.01159991245349,,100.0,43.55140925561148,derived_portfolio_dimension

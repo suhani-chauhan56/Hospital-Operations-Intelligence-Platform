@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Live_App-FF4B4B?logo=streamlit&logoColor=white)](https://hospital-operations-intelligence-platform-hvnncsycljark8qxv7b8.streamlit.app/)
-[![Tests](https://img.shields.io/badge/Tests-9_Passing-28A745)](#-quality-and-governance)
+[![Tests](https://img.shields.io/badge/Tests-10_Passing-28A745)](#-quality-and-governance)
 [![License](https://img.shields.io/badge/License-MIT-0F4C81)](LICENSE)
 
 ## 🚀 Live Demo
@@ -24,7 +24,7 @@ This project converts fragmented data into a governed platform combining **ETL, 
 
 | Admissions | Unique patients | Claims | SQL analyses | Notebooks | Quality checks |
 |---:|---:|---:|---:|---:|---:|
-| **120,000** | **64,873** | **70,000** | **60** | **8** | **28 contracts + 9 tests** |
+| **120,000** | **64,873** | **70,000** | **65** | **8** | **33 contracts + 10 tests** |
 
 ## 🧱 End-to-End Architecture
 
@@ -36,9 +36,10 @@ flowchart LR
     C --> E[Feature Store]
     D --> F[SQL Analytics]
     E --> G[ML + SHAP]
-    F --> H[Streamlit / Power BI]
+    F --> H[Governed Operational Marts]
     G --> H
-    H --> I[Executive PDF]
+    H --> I[Streamlit / Power BI]
+    H --> J[Executive PDF]
 ```
 
 ## 💡 Verified Business Insights
@@ -59,6 +60,8 @@ Recommendations, owners, thresholds, and timeframes are available in the [execut
 | Executive Dashboard | AI Prediction Center |
 |---|---|
 | ![Executive dashboard](reports/screenshots/executive-dashboard.png) | ![AI predictions](reports/screenshots/ai-predictions.png) |
+
+The Command Center combines a latest-day operational snapshot, transparent hospital efficiency score, seven-day outlook, department scoring, and accountable recommendations. Patient risk can be scored directly from a Patient ID with model-specific positive risk drivers.
 
 <details>
 <summary><strong>View additional application screens</strong></summary>
@@ -91,15 +94,20 @@ Core models use observed targets. Waiting time is simulated, while admission-lev
 
 ## 🗃️ MySQL and SQL Analytics
 
-The warehouse contains **12 normalized tables**:
+The warehouse contains **12 normalized core tables** plus **5 governed
+operational marts**:
 
 ```text
 patients      doctors       departments    admissions
 diagnoses     procedures    medicines      labs
 insurance     billing       claims         appointments
+
+command_center_kpis       hospital_efficiency_scores
+emergency_forecast        operational_forecast_summary
+operational_recommendations
 ```
 
-Implementation includes **primary and foreign keys, constraints, indexes, KPI views, stored procedures, billing triggers, CTEs, window functions, 60 analytical queries, an FK-ordered loader, and a deployment verifier**.
+Implementation includes **primary and foreign keys, constraints, indexes, KPI views, stored procedures, billing triggers, CTEs, window functions, 65 analytical queries, an FK-ordered loader, and a deployment verifier**.
 
 See [`schema.sql`](sql/schema.sql), [`views.sql`](sql/views.sql), and [`analytics.sql`](sql/analytics.sql).
 
@@ -124,7 +132,7 @@ models/       Registered pipelines and artifact manifest
 notebooks/    Cleaning through SHAP experimentation
 powerbi/      DAX measures, theme, and implementation guide
 reports/      Metrics, forecasts, screenshots, action plan, PDFs
-sql/          Schema, views, procedures, and 60 analyses
+sql/          Schema, views, procedures, and 65 analyses
 src/          Production ETL, ML, reporting, and validation
 streamlit/    Interactive application
 tests/        Data, model, assistant, report, and UI tests
@@ -157,7 +165,8 @@ Execution flow:
 
 ```text
 Data validation -> ETL -> Feature engineering -> Model training
--> SHAP -> Executive report -> Contract validation -> Deployment bundle
+-> SHAP -> Operational marts -> Executive report
+-> Contract validation -> Deployment bundle
 ```
 
 ### 4. Launch Streamlit
@@ -183,7 +192,7 @@ python src\validate_project.py
 python -m pytest -q
 ```
 
-Expected result: **28 project contracts and 9 tests passing**.
+Expected result: **33 project contracts and 10 tests passing**.
 
 ## ⚠️ Responsible Use and Limitations
 

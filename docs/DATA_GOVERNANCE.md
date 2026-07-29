@@ -17,6 +17,12 @@ demonstrate an end-to-end warehouse and application.
 | Mixed surrogate/simulated | Scenario planning only |
 | Assumption | Sensitivity analysis; replace before deployment |
 
+The hospital efficiency score is a transparent portfolio composite: 40%
+patient outcomes, 30% collections, 20% capacity balance, and 10% patient flow.
+Department scores use a derived dimension, emergency waiting time is simulated,
+and capacity uses the configured 500-bed assumption. The score is suitable for
+portfolio demonstration, not approved hospital performance management.
+
 ## Model Gates
 
 - Readmission predictions require local clinical validation, calibration,

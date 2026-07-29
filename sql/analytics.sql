@@ -564,3 +564,72 @@ FROM (
 GROUP BY
     x.flow_date
 ORDER BY x.flow_date;
+
+-- 61 Hospital command center snapshot
+SELECT *
+FROM vw_command_center;
+
+-- 62 Department efficiency ranking
+SELECT
+    scope_name AS department,
+    efficiency_score,
+    patient_outcome_score,
+    capacity_balance_score,
+    patient_flow_score,
+    efficiency_rank
+FROM vw_efficiency_ranking
+WHERE scope_type = 'department'
+ORDER BY efficiency_rank;
+
+-- 63 Next-week emergency forecast
+SELECT
+    forecast_date,
+    forecast_emergency_patients,
+    method,
+    provenance
+FROM emergency_forecast
+ORDER BY forecast_date;
+
+-- 64 Accountable operational recommendation queue
+SELECT
+    priority,
+    title,
+    signal,
+    action,
+    owner,
+    timeframe,
+    success_measure,
+    reliability
+FROM vw_operational_action_queue
+ORDER BY priority_order, title;
+
+-- 65 Efficiency components below 70
+SELECT
+    scope_type,
+    scope_name,
+    component,
+    score
+FROM (
+    SELECT
+        scope_type,
+        scope_name,
+        'Patient outcomes' AS component,
+        patient_outcome_score AS score
+    FROM hospital_efficiency_scores
+    UNION ALL
+    SELECT
+        scope_type,
+        scope_name,
+        'Capacity balance',
+        capacity_balance_score
+    FROM hospital_efficiency_scores
+    UNION ALL
+    SELECT
+        scope_type,
+        scope_name,
+        'Patient flow',
+        patient_flow_score
+    FROM hospital_efficiency_scores
+) components
+WHERE score < 70
+ORDER BY score;

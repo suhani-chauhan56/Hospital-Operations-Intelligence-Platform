@@ -35,6 +35,11 @@ REQUIRED_ARTIFACTS = (
     REPORTS / "revenue_model_metrics.csv",
     REPORTS / "occupancy_model_metrics.csv",
     REPORTS / "occupancy_forecast.csv",
+    REPORTS / "command_center_kpis.csv",
+    REPORTS / "hospital_efficiency_scores.csv",
+    REPORTS / "emergency_forecast.csv",
+    REPORTS / "operational_forecast_summary.csv",
+    REPORTS / "operational_recommendations.csv",
     REPORTS / "executive_report.pdf",
 )
 

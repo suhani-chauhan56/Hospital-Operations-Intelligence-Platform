@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, inspect, text
 
 ROOT = Path(__file__).resolve().parents[1]
 PROCESSED = ROOT / "datasets" / "processed"
+REPORTS = ROOT / "reports"
 TABLE_ORDER = [
     "departments",
     "patients",
@@ -23,6 +24,13 @@ TABLE_ORDER = [
     "billing",
     "claims",
     "appointments",
+]
+MART_TABLES = [
+    "command_center_kpis",
+    "hospital_efficiency_scores",
+    "emergency_forecast",
+    "operational_forecast_summary",
+    "operational_recommendations",
 ]
 
 
@@ -42,7 +50,9 @@ def main() -> None:
 
     engine = create_engine(url, pool_pre_ping=True)
     existing = set(inspect(engine).get_table_names())
-    missing_schema = [table for table in TABLE_ORDER if table not in existing]
+    missing_schema = [
+        table for table in [*TABLE_ORDER, *MART_TABLES] if table not in existing
+    ]
     if missing_schema:
         raise RuntimeError(
             "Run sql/schema.sql first. Missing tables: "
@@ -52,7 +62,7 @@ def main() -> None:
     if args.truncate:
         with engine.begin() as connection:
             connection.execute(text("SET FOREIGN_KEY_CHECKS=0"))
-            for table in reversed(TABLE_ORDER):
+            for table in reversed([*TABLE_ORDER, *MART_TABLES]):
                 connection.execute(text(f"DELETE FROM `{table}`"))
             connection.execute(text("SET FOREIGN_KEY_CHECKS=1"))
 
@@ -87,6 +97,27 @@ def main() -> None:
         method="multi",
     )
     print(f"Loaded model_features: {len(features):,} rows")
+
+    for table in MART_TABLES:
+        frame = pd.read_csv(REPORTS / f"{table}.csv")
+        frame.to_sql(
+            table,
+            engine,
+            if_exists="append",
+            index=False,
+            chunksize=1000,
+            method="multi",
+        )
+        with engine.connect() as connection:
+            database_rows = connection.execute(
+                text(f"SELECT COUNT(*) FROM `{table}`")
+            ).scalar_one()
+        if database_rows != len(frame):
+            raise RuntimeError(
+                f"Row-count mismatch for {table}: CSV={len(frame)}, "
+                f"MySQL={database_rows}"
+            )
+        print(f"Loaded {table}: {database_rows:,} rows")
 
 
 if __name__ == "__main__":

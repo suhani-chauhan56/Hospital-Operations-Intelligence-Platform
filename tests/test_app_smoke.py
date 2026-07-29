@@ -14,6 +14,10 @@ def test_all_streamlit_routes_render():
         str(ROOT / "streamlit" / "app.py"), default_timeout=60
     ).run()
     assert not app.exception
+    assert any(
+        "Hospital Intelligence Center" in markdown.value
+        for markdown in app.markdown
+    )
     for option in app.radio[0].options:
         app.radio[0].set_value(option).run()
         assert not app.exception
@@ -34,6 +38,11 @@ def test_prediction_forms_execute():
     ]:
         [button for button in app.button if button.label == label][0].click().run()
         assert not app.exception
+        if label == "Analyze readmission risk":
+            assert any(
+                "Why this risk level?" in markdown.value
+                for markdown in app.markdown
+            )
 
 
 def test_executive_report_refreshes():

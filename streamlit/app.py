@@ -334,6 +334,9 @@ def inject_css() -> None:
             gap: 12px;
             margin: 4px 0 20px;
         }}
+        .kpi-grid.grid-3 {{ grid-template-columns: repeat(3, minmax(140px, 1fr)); }}
+        .kpi-grid.grid-4 {{ grid-template-columns: repeat(4, minmax(140px, 1fr)); }}
+        .kpi-grid.grid-5 {{ grid-template-columns: repeat(5, minmax(140px, 1fr)); }}
         .kpi-card {{
             position: relative;
             min-height: 112px;
@@ -517,7 +520,9 @@ def inject_css() -> None:
             to {{ transform: translateX(245%); }}
         }}
         @media (max-width: 1100px) {{
-            .kpi-grid {{ grid-template-columns: repeat(3, 1fr); }}
+            .kpi-grid, .kpi-grid.grid-4, .kpi-grid.grid-5 {{
+                grid-template-columns: repeat(3, 1fr);
+            }}
             .experience-band {{ grid-template-columns: repeat(2, 1fr); }}
             .hero-content {{ width: 82%; }}
         }}
@@ -525,7 +530,8 @@ def inject_css() -> None:
             .block-container {{ padding-left: 1rem; padding-right: 1rem; }}
             .product-header {{ min-height: 165px; padding: 20px; }}
             .product-title {{ font-size: 24px; }}
-            .kpi-grid {{ grid-template-columns: repeat(2, 1fr); }}
+            .kpi-grid, .kpi-grid.grid-3, .kpi-grid.grid-4,
+            .kpi-grid.grid-5 {{ grid-template-columns: repeat(2, 1fr); }}
             .journey {{ grid-template-columns: repeat(2, 1fr); }}
             .landing-hero {{
                 min-height: 610px;
@@ -599,6 +605,13 @@ def load_report(name: str) -> pd.DataFrame:
     return pd.read_csv(path) if path.exists() else pd.DataFrame()
 
 
+@st.cache_data(show_spinner=False)
+def load_mart(name: str) -> pd.DataFrame:
+    if requested_data_source() == "mysql":
+        return pd.read_sql_table(name, database_engine())
+    return load_report(f"{name}.csv")
+
+
 @st.cache_resource(show_spinner=False)
 def load_model(name: str):
     path = MODELS / name
@@ -647,6 +660,13 @@ def load_platform_data() -> dict[str, pd.DataFrame]:
         "patient_explanations": load_report(
             "patient_readmission_explanations.csv"
         ),
+        "command_center": load_mart("command_center_kpis"),
+        "efficiency_scores": load_mart("hospital_efficiency_scores"),
+        "emergency_forecast": load_mart("emergency_forecast"),
+        "operational_forecast": load_mart(
+            "operational_forecast_summary"
+        ),
+        "recommendations": load_mart("operational_recommendations"),
     }
 
 
@@ -728,7 +748,11 @@ def kpi_grid(items: list[dict[str, str]]) -> None:
             f'<div class="kpi-delta">{escape(item["delta"])}</div>'
             "</div>"
         )
-    st.markdown(f'<div class="kpi-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
+    grid_class = f" grid-{len(items)}" if 3 <= len(items) <= 5 else ""
+    st.markdown(
+        f'<div class="kpi-grid{grid_class}">{"".join(cards)}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def result_card(
@@ -974,8 +998,31 @@ def risk_gauge(probability: float, title: str) -> go.Figure:
     )
 
 
+def local_risk_drivers(model, row: pd.DataFrame, top_n: int = 4) -> pd.DataFrame:
+    prep = model.named_steps["prep"]
+    estimator = model.named_steps["model"]
+    transformed = prep.transform(row[model_columns(model)])
+    values = transformed.toarray()[0] if hasattr(transformed, "toarray") else np.asarray(transformed)[0]
+    contributions = values * estimator.coef_[0]
+    names = prep.get_feature_names_out()
+    drivers = pd.DataFrame(
+        {"feature": names, "contribution": contributions}
+    )
+    drivers = drivers[drivers["contribution"] > 0].nlargest(
+        top_n,
+        "contribution",
+    )
+    drivers["feature"] = (
+        drivers["feature"]
+        .str.replace("numeric__", "", regex=False)
+        .str.replace("categorical__", "", regex=False)
+        .str.replace("_", " ")
+        .str.title()
+    )
+    return drivers
+
+
 def home_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
-    features, billing = data["features"], data["billing"]
     logo_uri = asset_data_uri(LOGO)
     st.markdown(
         f"""
@@ -1011,6 +1058,184 @@ def home_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         ),
     )
 
+    required_marts = [
+        "command_center",
+        "efficiency_scores",
+        "operational_forecast",
+        "recommendations",
+    ]
+    if any(data[name].empty for name in required_marts):
+        st.error(
+            "Operational intelligence marts are unavailable. Run "
+            "`python src/operational_intelligence.py`."
+        )
+        return
+    snapshot = data["command_center"].iloc[0]
+    hospital_score = data["efficiency_scores"].query(
+        "scope_type == 'hospital'"
+    ).iloc[0]
+    overall_score = float(hospital_score["efficiency_score"])
+    department_scores = data["efficiency_scores"].query(
+        "scope_type == 'department'"
+    )
+    score_components = {
+        "Patient outcomes": float(hospital_score["patient_outcome_score"]),
+        "Collections": float(hospital_score["collection_score"]),
+        "Capacity balance": float(
+            hospital_score["capacity_balance_score"]
+        ),
+        "Patient flow": float(hospital_score["patient_flow_score"]),
+    }
+    forecast = data["operational_forecast"].iloc[0]
+    section_title(
+        f"Hospital Intelligence Center · latest observed date "
+        f"{pd.Timestamp(snapshot['as_of_date']).date()}"
+    )
+    kpi_grid(
+        [
+            {
+                "label": "Patients today",
+                "value": f"{int(snapshot['patients_today']):,}",
+                "delta": "Unique patients admitted",
+                "color": COLORS["blue"],
+            },
+            {
+                "label": "Bed occupancy",
+                "value": f"{float(snapshot['occupancy_pct']):.1f}%",
+                "delta": f"{int(snapshot['occupied_beds']):,} occupied beds",
+                "color": COLORS["teal"],
+            },
+            {
+                "label": "Emergency wait time",
+                "value": f"{float(snapshot['emergency_wait_minutes']):.0f} min",
+                "delta": "Simulated queue measure",
+                "color": COLORS["gold"],
+            },
+            {
+                "label": "Critical patients",
+                "value": f"{int(snapshot['critical_patients']):,}",
+                "delta": "ICU or top-complexity cohort",
+                "color": COLORS["coral"],
+            },
+            {
+                "label": "Doctor utilization",
+                "value": f"{float(snapshot['doctor_utilization_pct']):.0f}%",
+                "delta": "Derived workload index",
+                "color": COLORS["green"],
+            },
+            {
+                "label": "Efficiency score",
+                "value": f"{overall_score:.0f}/100",
+                "delta": "Transparent composite index",
+                "color": COLORS["blue"],
+            },
+        ]
+    )
+
+    left, right = st.columns([1, 1.45])
+    with left:
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=overall_score,
+                number={"suffix": "/100"},
+                title={"text": "Hospital Performance Score"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": COLORS["blue"]},
+                    "steps": [
+                        {"range": [0, 60], "color": "#F8D7DA"},
+                        {"range": [60, 80], "color": "#FFF2C2"},
+                        {"range": [80, 100], "color": "#D8F0E0"},
+                    ],
+                },
+            )
+        )
+        st.plotly_chart(style_figure(fig, 330), width="stretch")
+        component_frame = pd.DataFrame(
+            {
+                "component": list(score_components),
+                "score": list(score_components.values()),
+            }
+        )
+        st.dataframe(
+            component_frame,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "score": st.column_config.ProgressColumn(
+                    min_value=0,
+                    max_value=100,
+                    format="%.0f",
+                )
+            },
+        )
+    with right:
+        section_title("Next-week operational outlook")
+        kpi_grid(
+            [
+                {
+                    "label": "Emergency patients",
+                    "value": f"{int(forecast['emergency_patients']):,}",
+                    "delta": (
+                        f"{float(forecast['emergency_growth_pct']):+.1f}% "
+                        "vs latest week"
+                    ),
+                    "color": COLORS["coral"],
+                },
+                {
+                    "label": "Additional beds",
+                    "value": f"{int(forecast['additional_beds']):+d}",
+                    "delta": "Peak occupied-bed requirement",
+                    "color": COLORS["teal"],
+                },
+                {
+                    "label": "Peak forecast day",
+                    "value": str(forecast["peak_day"]),
+                    "delta": f"{int(forecast['peak_day_volume'])} emergency admissions",
+                    "color": COLORS["gold"],
+                },
+            ]
+        )
+        top_departments = department_scores.nlargest(
+            min(8, len(department_scores)),
+            "efficiency_score",
+        ).sort_values("efficiency_score")
+        fig = px.bar(
+            top_departments,
+            x="efficiency_score",
+            y="scope_name",
+            orientation="h",
+            title="Department efficiency score",
+            color="efficiency_score",
+            color_continuous_scale=["#FFF2C2", "#6EC5D2", "#0F4C81"],
+            range_x=[0, 100],
+        )
+        st.plotly_chart(style_figure(fig, 390), width="stretch")
+
+    section_title("AI recommendation layer")
+    recommendations = data["recommendations"].to_dict("records")
+    columns = st.columns(len(recommendations))
+    for column, recommendation in zip(columns, recommendations):
+        with column:
+            st.markdown(
+                f"""
+                <div class="profile-card">
+                    <span class="material-symbols-rounded">clinical_notes</span>
+                    <strong>{escape(recommendation["title"])}</strong>
+                    <div class="result-label">{escape(recommendation["signal"])}</div>
+                    <p>{escape(recommendation["action"])}</p>
+                    <small>{escape(recommendation["owner"])} · {escape(recommendation["timeframe"])}</small>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.caption(
+        "Forecast uses observed daily emergency admissions and the registered occupied-bed forecast. "
+        "Peak-hour prediction is intentionally withheld because source records do not contain arrival timestamps."
+    )
+
     st.markdown(
         """
         <div class="experience-band">
@@ -1037,36 +1262,6 @@ def home_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         </div>
         """,
         unsafe_allow_html=True,
-    )
-
-    occupancy = calculate_historical_occupancy(features, capacity)
-    kpi_grid(
-        [
-            {
-                "label": "Patients served",
-                "value": compact_number(features["patient_id"].nunique()),
-                "delta": f"{len(features):,} admissions analyzed",
-                "color": COLORS["blue"],
-            },
-            {
-                "label": "30-day readmission",
-                "value": f"{features['readmitted_30d'].mean():.1%}",
-                "delta": "Observed outcome",
-                "color": COLORS["coral"],
-            },
-            {
-                "label": "Collected revenue",
-                "value": compact_number(billing["paid_amount"].sum(), currency=True),
-                "delta": "Observed receipts",
-                "color": COLORS["green"],
-            },
-            {
-                "label": "Bed occupancy",
-                "value": f"{occupancy.tail(30)['occupancy_pct'].mean():.1f}%",
-                "delta": f"{capacity:,} configured beds",
-                "color": COLORS["teal"],
-            },
-        ]
     )
 
 
@@ -1947,12 +2142,82 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
         if readmission_model is None:
             st.error("Readmission model artifact is unavailable.")
         else:
-            with st.form("readmission_prediction"):
-                row, _ = model_input_form(features, "readmission")
-                submit = st.form_submit_button(
-                    "Analyze readmission risk",
-                    type="primary",
+            input_mode = st.segmented_control(
+                "Prediction input",
+                ["Patient record", "Custom scenario"],
+                default="Patient record",
+            )
+            row = None
+            selected_patient = None
+            if input_mode == "Patient record":
+                patient_query = st.text_input(
+                    "Patient ID",
+                    value=str(st.session_state.get("selected_patient_id", "")),
+                    placeholder="Enter a complete or partial patient ID",
                 )
+                patient_matches = features
+                if patient_query.strip():
+                    patient_matches = features[
+                        features["patient_id"].astype(str).str.contains(
+                            patient_query.strip(),
+                            case=False,
+                            regex=False,
+                            na=False,
+                        )
+                    ]
+                patient_ids = (
+                    patient_matches["patient_id"]
+                    .drop_duplicates()
+                    .astype(str)
+                    .head(200)
+                    .tolist()
+                )
+                if patient_ids:
+                    selected_patient = st.selectbox(
+                        "Matching patient record",
+                        patient_ids,
+                        key="prediction_patient_id",
+                    )
+                    row = (
+                        features[
+                            features["patient_id"].astype(str)
+                            == selected_patient
+                        ]
+                        .sort_values("admit_date")
+                        .tail(1)
+                    )
+                    latest = row.iloc[0]
+                    st.markdown(
+                        f"""
+                        <div class="profile-card">
+                            <strong>Patient {escape(selected_patient)}</strong>
+                            <div class="profile-meta">
+                                <span>{escape(str(latest["ward_type"]))} ward</span>
+                                <span>{escape(str(latest["admit_type"]))} admission</span>
+                                <span>{int(latest["previous_admissions"])} previous admissions</span>
+                                <span>{int(latest["lab_abnormality_score"])} abnormal lab indicators</span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.warning("No matching patient record was found.")
+            else:
+                with st.form("readmission_prediction_inputs"):
+                    row, _ = model_input_form(features, "readmission")
+                    st.form_submit_button(
+                        "Apply custom inputs",
+                        type="secondary",
+                    )
+
+            submit = False
+            if row is not None:
+                with st.form("readmission_prediction"):
+                    submit = st.form_submit_button(
+                        "Analyze readmission risk",
+                        type="primary",
+                    )
             if submit:
                 probability = float(
                     readmission_model.predict_proba(
@@ -1990,6 +2255,33 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
                     st.info(
                         "Use this score to prioritize review and discharge follow-up. It does not replace clinical judgment."
                     )
+                drivers = local_risk_drivers(readmission_model, row)
+                section_title("Why this risk level?")
+                if drivers.empty:
+                    st.info(
+                        "No positive model contributions were identified for this scenario."
+                    )
+                else:
+                    driver_columns = st.columns(len(drivers))
+                    for column, driver in zip(
+                        driver_columns,
+                        drivers.itertuples(index=False),
+                    ):
+                        with column:
+                            st.markdown(
+                                f"""
+                                <div class="experience-item">
+                                    <span class="material-symbols-rounded">priority_high</span>
+                                    <strong>{escape(str(driver.feature))}</strong>
+                                    <small>Positive model contribution {driver.contribution:.3f}</small>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+                st.caption(
+                    "Reasons are calculated from the registered logistic-regression pipeline for this input. "
+                    "They explain model behavior and are not clinical diagnoses."
+                )
     with tab_wait:
         if waiting_model is None:
             st.error("Waiting-time model artifact is unavailable.")
@@ -2392,8 +2684,13 @@ def reports_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         if st.button("Refresh executive PDF", type="primary", width="stretch"):
             with st.spinner("Analyzing hospital data and building the report..."):
                 from generate_executive_report import main as generate_report
+                from operational_intelligence import main as generate_marts
 
+                generate_marts()
                 generate_report()
+                load_report.clear()
+                load_mart.clear()
+                load_platform_data.clear()
             st.success("Executive report refreshed.")
         if pdf_path.exists():
             st.download_button(

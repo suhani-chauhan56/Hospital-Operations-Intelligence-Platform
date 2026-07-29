@@ -42,6 +42,7 @@ Execution order:
 data_pipeline.py
 -> train_models.py
 -> shap_explainability.py
+-> operational_intelligence.py
 -> generate_executive_report.py
 -> validate_project.py
 ```
@@ -120,8 +121,8 @@ python -m pytest -q
 Expected:
 
 ```text
-Project validation passed: 28 table and model contracts.
-8 passed
+Project validation passed: 33 table and model contracts.
+10 passed
 ```
 
 ## 6. Notebook Workflow

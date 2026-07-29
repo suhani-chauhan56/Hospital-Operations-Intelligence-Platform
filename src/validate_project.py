@@ -203,6 +203,146 @@ def main() -> None:
         }
     )
 
+    mart_contracts = {
+        "command_center_kpis": {
+            "columns": {
+                "as_of_date",
+                "patients_today",
+                "occupancy_pct",
+                "occupied_beds",
+                "emergency_wait_minutes",
+                "critical_patients",
+                "doctor_utilization_pct",
+                "hospital_efficiency_score",
+                "snapshot_provenance",
+            },
+            "rows": 1,
+        },
+        "hospital_efficiency_scores": {
+            "columns": {
+                "scope_type",
+                "scope_name",
+                "efficiency_score",
+                "patient_outcome_score",
+                "capacity_balance_score",
+                "patient_flow_score",
+                "provenance",
+            },
+            "rows": None,
+        },
+        "emergency_forecast": {
+            "columns": {
+                "forecast_date",
+                "forecast_emergency_patients",
+                "method",
+                "provenance",
+            },
+            "rows": 7,
+        },
+        "operational_forecast_summary": {
+            "columns": {
+                "forecast_start_date",
+                "forecast_end_date",
+                "emergency_patients",
+                "additional_beds",
+                "peak_day",
+                "method",
+                "peak_hour_status",
+            },
+            "rows": 1,
+        },
+        "operational_recommendations": {
+            "columns": {
+                "priority",
+                "title",
+                "signal",
+                "action",
+                "owner",
+                "timeframe",
+                "success_measure",
+                "reliability",
+            },
+            "rows": None,
+        },
+    }
+    marts = {}
+    for name, contract in mart_contracts.items():
+        path = REPORTS / f"{name}.csv"
+        require(path.exists(), f"Missing operational mart: {path}")
+        frame = pd.read_csv(path)
+        marts[name] = frame
+        require(
+            contract["columns"].issubset(frame.columns),
+            f"Operational mart columns are incomplete: {name}",
+        )
+        if contract["rows"] is not None:
+            require(
+                len(frame) == contract["rows"],
+                f"Operational mart row count is invalid: {name}",
+            )
+        else:
+            require(not frame.empty, f"Operational mart is empty: {name}")
+        checks.append(
+            {
+                "check": f"operational_mart:{name}",
+                "status": "passed",
+                "rows": len(frame),
+            }
+        )
+
+    command = marts["command_center_kpis"].iloc[0]
+    efficiency = marts["hospital_efficiency_scores"]
+    require(
+        pd.Timestamp(command["as_of_date"]) == admission_dates["admit_date"].max(),
+        "Command-center date does not match the latest observed admission date",
+    )
+    require(
+        0 <= float(command["occupancy_pct"]) <= 100
+        and 0 <= float(command["doctor_utilization_pct"]) <= 100
+        and 0 <= float(command["hospital_efficiency_score"]) <= 100,
+        "Command-center percentage or score is outside 0-100",
+    )
+    require(
+        efficiency["efficiency_score"].between(0, 100).all(),
+        "Efficiency score is outside 0-100",
+    )
+    hospital_score = efficiency.loc[
+        efficiency["scope_type"] == "hospital",
+        "efficiency_score",
+    ]
+    require(
+        len(hospital_score) == 1
+        and abs(
+            float(hospital_score.iloc[0])
+            - float(command["hospital_efficiency_score"])
+        )
+        < 1e-6,
+        "Hospital efficiency score is inconsistent across marts",
+    )
+    emergency_dates = pd.to_datetime(
+        marts["emergency_forecast"]["forecast_date"]
+    )
+    require(
+        emergency_dates.is_monotonic_increasing
+        and emergency_dates.min() > admission_dates["admit_date"].max(),
+        "Emergency forecast dates do not follow the observed data period",
+    )
+    outlook = marts["operational_forecast_summary"].iloc[0]
+    require(
+        outlook["peak_hour_status"] == "unavailable_no_arrival_timestamps",
+        "Peak-hour governance status is missing",
+    )
+    recommendation_mart = marts["operational_recommendations"]
+    require(
+        recommendation_mart[
+            ["owner", "timeframe", "success_measure", "reliability"]
+        ]
+        .notna()
+        .all()
+        .all(),
+        "Operational recommendations lack accountability or reliability",
+    )
+
     summary = {
         "validated_at_utc": datetime.now(timezone.utc).isoformat(),
         "status": "passed",

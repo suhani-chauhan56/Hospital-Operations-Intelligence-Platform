@@ -17,8 +17,9 @@ lineage, and model contracts.
 
 ### 3. SQL and warehouse
 
-The MySQL design contains 12 normalized business tables, keys, indexes, views,
-procedures, triggers, 60 analytical queries, CTEs, and window functions.
+The MySQL design contains 12 normalized business tables, five governed
+operational marts, keys, indexes, views,
+procedures, triggers, 65 analytical queries, CTEs, and window functions.
 `src/load_mysql.py` performs FK-ordered loads; `src/verify_mysql_deployment.py`
 produces auditable database evidence.
 
@@ -38,7 +39,7 @@ The accountable action plan is in `reports/executive_action_plan.csv`.
 
 The Streamlit application exposes operational analysis, governed patient-record
 summaries, forecasts, model explanations, reports, and downloads. The executive
-PDF is a four-page decision pack with periods, trends, thresholds, owners, and
+PDF is a five-page decision pack with periods, trends, thresholds, owners, and
 timeframes. Power BI assets provide the model, measures, page plan, and theme.
 
 ## Evidence Map

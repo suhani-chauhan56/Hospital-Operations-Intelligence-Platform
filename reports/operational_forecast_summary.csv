@@ -1,0 +1,2 @@
+forecast_start_date,forecast_end_date,emergency_patients,emergency_growth_pct,additional_beds,peak_day,peak_day_volume,method,peak_hour_status
+2024-12-31,2025-01-06,127,-0.19685039370078705,0,Thursday,20,weekday_seasonal_emergency_baseline_plus_registered_occupied_bed_forecast,unavailable_no_arrival_timestamps

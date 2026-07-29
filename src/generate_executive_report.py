@@ -86,7 +86,14 @@ def add_footer(fig: plt.Figure, text: str) -> None:
     fig.add_artist(
         plt.Line2D([0.055, 0.945], [0.045, 0.045], color=LINE, linewidth=1)
     )
-    fig.text(0.055, 0.022, text, fontsize=6.8, color=MUTED)
+    fig.text(
+        0.055,
+        0.014,
+        fill(text, 105),
+        fontsize=6.3,
+        color=MUTED,
+        va="bottom",
+    )
     fig.text(
         0.945,
         0.022,
@@ -175,6 +182,22 @@ def main() -> None:
     claims = read_processed_table("claims")
     insurance = read_processed_table("insurance")
     forecast = pd.read_csv(REPORTS / "occupancy_forecast.csv")
+    command_center = pd.read_csv(
+        REPORTS / "command_center_kpis.csv",
+        parse_dates=["as_of_date"],
+    )
+    efficiency = pd.read_csv(REPORTS / "hospital_efficiency_scores.csv")
+    emergency_forecast = pd.read_csv(
+        REPORTS / "emergency_forecast.csv",
+        parse_dates=["forecast_date"],
+    )
+    operational_outlook = pd.read_csv(
+        REPORTS / "operational_forecast_summary.csv",
+        parse_dates=["forecast_start_date", "forecast_end_date"],
+    )
+    operational_actions = pd.read_csv(
+        REPORTS / "operational_recommendations.csv"
+    )
     model_metrics = load_metrics()
     thresholds = config_value("executive_monitoring_thresholds")
 
@@ -261,44 +284,40 @@ def main() -> None:
         forecast.loc[forecast["horizon_days"] == 30, "forecast_occupancy_pct"].iloc[0]
     )
 
-    action_plan = pd.DataFrame(
+    action_plan = operational_actions.rename(
+        columns={"signal": "evidence"}
+    )[
         [
-            {
-                "priority": "P1",
-                "action": "Review ICU readmissions and discharge follow-up workflow",
-                "owner": "Clinical Quality Lead",
-                "timeframe": "30 days",
-                "success_measure": "Root-cause review completed; approved ward target established",
-                "evidence": f"ICU readmission {ward.loc['ICU', 'readmission_rate']:.1%}",
-            },
-            {
-                "priority": "P1",
-                "action": "Analyze payer collection leakage and denied claims",
-                "owner": "Revenue Cycle Manager",
-                "timeframe": "30 days",
-                "success_measure": (
-                    f"Collection rate monitored against illustrative "
-                    f"{thresholds['claim_collection_rate']:.0%} threshold"
-                ),
-                "evidence": f"Current collection rate {collection_rate:.1%}",
-            },
-            {
-                "priority": "P2",
-                "action": "Capture real arrival, triage, and service timestamps",
-                "owner": "Operations Data Owner",
-                "timeframe": "60 days",
-                "success_measure": "Observed queue timestamps pass completeness checks",
-                "evidence": "Current waiting target is simulated",
-            },
-            {
-                "priority": "P2",
-                "action": "Replace surrogate claim links and derived master data",
-                "owner": "Data Governance Lead",
-                "timeframe": "90 days",
-                "success_measure": "Governed encounter, provider, department, and patient keys",
-                "evidence": "Source files have no shared encounter key",
-            },
+            "priority",
+            "action",
+            "owner",
+            "timeframe",
+            "success_measure",
+            "evidence",
         ]
+    ]
+    action_plan = pd.concat(
+        [
+            action_plan,
+            pd.DataFrame(
+                [
+                    {
+                        "priority": "P2",
+                        "action": (
+                            "Replace surrogate claim links and derived master data"
+                        ),
+                        "owner": "Data Governance Lead",
+                        "timeframe": "90 days",
+                        "success_measure": (
+                            "Governed encounter, provider, department, and "
+                            "patient keys"
+                        ),
+                        "evidence": "Source files have no shared encounter key",
+                    }
+                ]
+            ),
+        ],
+        ignore_index=True,
     )
     action_plan.to_csv(REPORTS / "executive_action_plan.csv", index=False)
 
@@ -664,7 +683,151 @@ def main() -> None:
         pdf.savefig(fig, facecolor=fig.get_facecolor())
         plt.close(fig)
 
-    print("Executive PDF report saved: 4 decision-ready pages.")
+        # Page 5: command center, efficiency, forecast, and recommendations
+        command = command_center.iloc[0]
+        outlook = operational_outlook.iloc[0]
+        fig = plt.figure(figsize=(11.7, 8.3), facecolor="white")
+        add_header(
+            fig,
+            "Hospital Command Center",
+            (
+                f"Latest observed snapshot {command['as_of_date']:%d %b %Y} | "
+                "Forecasts and assumptions are explicitly labelled"
+            ),
+            5,
+            period,
+            generated,
+        )
+        cards = [
+            ("Patients today", f"{int(command['patients_today']):,}"),
+            ("Bed occupancy", f"{command['occupancy_pct']:.1f}%"),
+            (
+                "Emergency wait",
+                f"{command['emergency_wait_minutes']:.0f} min*",
+            ),
+            ("Critical patients", f"{int(command['critical_patients']):,}"),
+            (
+                "Doctor utilization",
+                f"{command['doctor_utilization_pct']:.0f}%*",
+            ),
+            (
+                "Efficiency score",
+                f"{command['hospital_efficiency_score']:.0f}/100*",
+            ),
+        ]
+        for index, (label, value) in enumerate(cards):
+            left = 0.055 + index * 0.148
+            card = FancyBboxPatch(
+                (left, 0.70),
+                0.135,
+                0.115,
+                boxstyle="round,pad=0.008,rounding_size=0.008",
+                transform=fig.transFigure,
+                facecolor=SURFACE,
+                edgecolor=LINE,
+                linewidth=0.8,
+            )
+            fig.patches.append(card)
+            fig.text(
+                left + 0.012,
+                0.775,
+                label.upper(),
+                fontsize=6.5,
+                weight="bold",
+                color=MUTED,
+            )
+            fig.text(
+                left + 0.012,
+                0.725,
+                value,
+                fontsize=16,
+                weight="bold",
+                color=INK,
+            )
+
+        department_efficiency = (
+            efficiency[efficiency["scope_type"] == "department"]
+            .sort_values("efficiency_score")
+        )
+        score_ax = fig.add_axes([0.11, 0.38, 0.36, 0.25])
+        score_ax.barh(
+            department_efficiency["scope_name"],
+            department_efficiency["efficiency_score"],
+            color=TEAL,
+        )
+        score_ax.set_xlim(0, 100)
+        score_ax.set_title("Department efficiency score*")
+        score_ax.set_xlabel("Score / 100")
+        style_axis(score_ax)
+
+        emergency_ax = fig.add_axes([0.55, 0.38, 0.39, 0.25])
+        emergency_ax.plot(
+            emergency_forecast["forecast_date"],
+            emergency_forecast["forecast_emergency_patients"],
+            color=CORAL,
+            marker="o",
+            linewidth=2,
+        )
+        emergency_ax.set_title(
+            f"Next-week emergency outlook | {int(outlook['emergency_patients'])} patients"
+        )
+        emergency_ax.tick_params(axis="x", rotation=25)
+        emergency_ax.set_ylabel("Forecast admissions")
+        style_axis(emergency_ax)
+
+        fig.text(
+            0.055,
+            0.315,
+            "ACCOUNTABLE RECOMMENDATIONS",
+            fontsize=9,
+            weight="bold",
+            color=TEAL,
+        )
+        recommendation_ax = fig.add_axes([0.055, 0.105, 0.89, 0.18])
+        recommendation_ax.axis("off")
+        recommendation_rows = [
+            [
+                row.priority,
+                fill(row.signal, 32),
+                fill(row.action, 48),
+                row.owner,
+                row.timeframe,
+            ]
+            for row in operational_actions.itertuples(index=False)
+        ]
+        table = recommendation_ax.table(
+            cellText=recommendation_rows,
+            colLabels=["Priority", "Signal", "Action", "Owner", "Timeframe"],
+            cellLoc="left",
+            colLoc="left",
+            loc="upper left",
+            bbox=[0, 0, 1, 1],
+            colWidths=[0.08, 0.20, 0.35, 0.24, 0.13],
+        )
+        table.auto_set_font_size(False)
+        table.set_fontsize(6.9)
+        for (row, _), cell in table.get_celld().items():
+            cell.set_edgecolor(LINE)
+            cell.set_linewidth(0.7)
+            if row == 0:
+                cell.set_facecolor(INK)
+                cell.get_text().set_color("white")
+                cell.get_text().set_weight("bold")
+            elif row % 2:
+                cell.set_facecolor(SURFACE)
+            cell.get_text().set_wrap(True)
+        add_footer(
+            fig,
+            (
+                "* Doctor utilization and department are derived; emergency wait "
+                "is simulated; capacity uses the configured 500-bed assumption. "
+                "Peak-hour forecasting is withheld because arrival timestamps are unavailable."
+            ),
+        )
+        pdf.savefig(fig, facecolor=fig.get_facecolor())
+        plt.close(fig)
+
+    print("Executive PDF report saved: 5 decision-ready pages.")
 
 
 if __name__ == "__main__":

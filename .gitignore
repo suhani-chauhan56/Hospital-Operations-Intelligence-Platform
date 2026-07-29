@@ -45,5 +45,10 @@ datasets/processed/*
 !reports/revenue_model_metrics.csv
 !reports/occupancy_model_metrics.csv
 !reports/occupancy_forecast.csv
+!reports/command_center_kpis.csv
+!reports/hospital_efficiency_scores.csv
+!reports/emergency_forecast.csv
+!reports/operational_forecast_summary.csv
+!reports/operational_recommendations.csv
 !reports/executive_report.pdf
 !reports/mysql_deployment_status.json
