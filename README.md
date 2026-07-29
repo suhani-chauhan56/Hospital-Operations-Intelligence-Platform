@@ -1,6 +1,6 @@
 # 🏥 Hospital Operations Intelligence Platform
 
-> AI-powered healthcare analytics and decision support for patient flow, readmissions, occupied-bed demand, claims, and executive operations.
+> A production-style healthcare analytics portfolio connecting governed ETL, MySQL, machine learning, SHAP, executive reporting, Power BI assets, and a deployed Streamlit command center.
 
 [![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
@@ -22,9 +22,17 @@ This project converts fragmented data into a governed platform combining **ETL, 
 
 ## 🎯 At a Glance
 
-| Admissions | Unique patients | Claims | SQL analyses | Notebooks | Quality checks |
+| Admissions | Unique patients | Claims | SQL analyses | Governed marts | Quality checks |
 |---:|---:|---:|---:|---:|---:|
-| **120,000** | **64,873** | **70,000** | **65** | **8** | **33 contracts + 10 tests** |
+| **120,000** | **64,873** | **70,000** | **65** | **5** | **33 contracts + 10 tests** |
+
+### What is implemented
+
+- Hospital Command Center with latest-day KPIs, efficiency scoring, forecasts, and owned actions
+- Patient 360 search and Patient ID readmission scoring with local model drivers
+- Four modeling workflows plus a healthcare assistant grounded in loaded analytics
+- Five-page PDF, downloadable outputs, and Power BI implementation assets
+- MySQL warehouse with normalized tables, analytical marts, views, procedures, triggers, and a deployment verifier
 
 ## 🧱 End-to-End Architecture
 
@@ -32,15 +40,19 @@ This project converts fragmented data into a governed platform combining **ETL, 
 flowchart LR
     A[Raw CSV] --> B[Excel Validation]
     B --> C[Python ETL]
-    C --> D[(MySQL Warehouse)]
-    C --> E[Feature Store]
-    D --> F[SQL Analytics]
-    E --> G[ML + SHAP]
-    F --> H[Governed Operational Marts]
+    C --> D[Processed Warehouse Tables]
+    C --> E[ML Feature Store]
+    E --> F[ML Models + SHAP]
+    D --> G[Governed Operational Marts]
+    F --> G
+    D --> H[(MySQL Warehouse)]
     G --> H
-    H --> I[Streamlit / Power BI]
-    H --> J[Executive PDF]
+    H --> I[SQL Analytics]
+    G --> J[Streamlit / Power BI / PDF]
+    I --> J
 ```
+
+Production entry point: [`run_pipeline.ps1`](run_pipeline.ps1). Notebooks are documented experimentation stages and are not required by the deployed app.
 
 ## 💡 Verified Business Insights
 
@@ -53,6 +65,14 @@ flowchart LR
 
 Recommendations, owners, thresholds, and timeframes are available in the [executive action plan](reports/executive_action_plan.csv).
 
+### Latest command-center output
+
+| Observed date | Patients | Occupied beds | Occupancy | Critical cohort | Efficiency | Next-week emergency forecast |
+|---|---:|---:|---:|---:|---:|---:|
+| `2024-12-30` | **36** | **263** | **52.6%**<sup>*</sup> | **14**<sup>*</sup> | **76/100**<sup>*</sup> | **127 patients** |
+
+`*` Occupancy uses the configured 500-bed assumption; critical cohort and efficiency are transparent portfolio-derived measures.
+
 ## 🖥️ Application Experience
 
 ![Hospital intelligence platform home](reports/screenshots/home-redesign-desktop.png)
@@ -61,7 +81,7 @@ Recommendations, owners, thresholds, and timeframes are available in the [execut
 |---|---|
 | ![Executive dashboard](reports/screenshots/executive-dashboard.png) | ![AI predictions](reports/screenshots/ai-predictions.png) |
 
-The Command Center combines a latest-day operational snapshot, transparent hospital efficiency score, seven-day outlook, department scoring, and accountable recommendations. Patient risk can be scored directly from a Patient ID with model-specific positive risk drivers.
+The Command Center reads the same five governed marts used by MySQL, Power BI, and the PDF. Patient risk is scored from the registered model pipeline, and positive drivers explain model behavior without presenting them as diagnoses.
 
 <details>
 <summary><strong>View additional application screens</strong></summary>
@@ -94,8 +114,7 @@ Core models use observed targets. Waiting time is simulated, while admission-lev
 
 ## 🗃️ MySQL and SQL Analytics
 
-The warehouse contains **12 normalized core tables** plus **5 governed
-operational marts**:
+The warehouse contains **12 normalized core tables** plus **5 governed operational marts**:
 
 ```text
 patients      doctors       departments    admissions
@@ -107,7 +126,7 @@ emergency_forecast        operational_forecast_summary
 operational_recommendations
 ```
 
-Implementation includes **primary and foreign keys, constraints, indexes, KPI views, stored procedures, billing triggers, CTEs, window functions, 65 analytical queries, an FK-ordered loader, and a deployment verifier**.
+Implementation includes **primary and foreign keys, constraints, indexes, KPI views, rerunnable stored procedures and triggers, CTEs, window functions, 65 analytical queries, an FK-ordered loader, and a deployment verifier**.
 
 See [`schema.sql`](sql/schema.sql), [`views.sql`](sql/views.sql), and [`analytics.sql`](sql/analytics.sql).
 
@@ -177,7 +196,20 @@ python -m streamlit run streamlit\app.py
 
 Open `http://localhost:8501`.
 
-For MySQL deployment, notebook order, Power BI, and troubleshooting, follow the [complete execution runbook](docs/RUNBOOK.md).
+### Optional: deploy MySQL
+
+1. Run `sql/schema.sql` in Workbench and confirm with `USE hospital_ops;`.
+2. Load the governed core tables and marts:
+
+```powershell
+$env:HOSPITAL_DB_URL = "mysql+mysqlconnector://root:YOUR_PASSWORD@localhost/hospital_ops"
+python src\load_mysql.py --truncate
+```
+
+3. Run `sql/views.sql` and `sql/procedures.sql` in Workbench.
+4. Verify with `python src\verify_mysql_deployment.py --require-ready`.
+
+Notebook order, Power BI instructions, and troubleshooting are in the [execution runbook](docs/RUNBOOK.md).
 
 ## ✅ Quality and Governance
 
