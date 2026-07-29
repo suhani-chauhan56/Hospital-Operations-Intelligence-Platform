@@ -105,11 +105,11 @@ See [`sql/schema.sql`](sql/schema.sql), [`sql/analytics.sql`](sql/analytics.sql)
 
 ## Dashboard Preview
 
-![Executive dashboard](reports/screenshots/executive-dashboard.png)
+![Hospital intelligence platform home](reports/screenshots/home-redesign-desktop.png)
 
 <table>
   <tr>
-    <td width="50%"><strong>Patient Analytics</strong><br><img src="reports/screenshots/patient-analytics.png" alt="Patient analytics"></td>
+    <td width="50%"><strong>Executive Dashboard</strong><br><img src="reports/screenshots/executive-dashboard.png" alt="Executive dashboard"></td>
     <td width="50%"><strong>Bed Occupancy</strong><br><img src="reports/screenshots/bed-occupancy.png" alt="Bed occupancy"></td>
   </tr>
 </table>

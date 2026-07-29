@@ -23,7 +23,10 @@ def test_prediction_forms_execute():
     app = AppTest.from_file(
         str(ROOT / "streamlit" / "app.py"), default_timeout=60
     ).run()
-    app.radio[0].set_value(app.radio[0].options[6]).run()
+    prediction_page = next(
+        option for option in app.radio[0].options if "AI Prediction" in option
+    )
+    app.radio[0].set_value(prediction_page).run()
     for label in [
         "Analyze readmission risk",
         "Estimate waiting time",
@@ -49,7 +52,12 @@ def test_assistant_handles_patient_status_and_recovery_questions():
         app = AppTest.from_file(
             str(ROOT / "streamlit" / "app.py"), default_timeout=60
         ).run()
-        app.radio[0].set_value(app.radio[0].options[-2]).run()
+        assistant_page = next(
+            option
+            for option in app.radio[0].options
+            if "Healthcare Assistant" in option
+        )
+        app.radio[0].set_value(assistant_page).run()
         app.text_input[0].set_value(patient_id).run()
         app.chat_input[0].set_value(question).run()
         assert not app.exception

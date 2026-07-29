@@ -5,6 +5,7 @@ import sys
 import json
 import hashlib
 import re
+import base64
 from html import escape
 from pathlib import Path
 
@@ -34,16 +35,16 @@ st.set_page_config(
 )
 
 COLORS = {
-    "teal": "#146C6E",
-    "green": "#269A78",
-    "coral": "#D7644A",
-    "gold": "#C9962B",
-    "blue": "#3D6E8F",
-    "ink": "#17242B",
-    "muted": "#64747C",
-    "line": "#DCE5E7",
+    "teal": "#17A2B8",
+    "green": "#28A745",
+    "coral": "#DC3545",
+    "gold": "#D39E00",
+    "blue": "#0F4C81",
+    "ink": "#183247",
+    "muted": "#627789",
+    "line": "#D9E7F0",
     "surface": "#FFFFFF",
-    "background": "#F4F7F8",
+    "background": "#F4F9FC",
 }
 CHART_COLORS = [
     COLORS["teal"],
@@ -56,12 +57,27 @@ CHART_COLORS = [
     "#A55768",
 ]
 
+NAVIGATION = [
+    "🏠 Home",
+    "📈 Executive Dashboard",
+    "👥 Patient Intelligence",
+    "🩺 Doctor Analytics",
+    "🏢 Department Insights",
+    "🛏 Bed Management",
+    "💰 Revenue Analytics",
+    "🤖 AI Prediction Center",
+    "📊 Explainable AI",
+    "💬 Healthcare Assistant",
+    "📄 Reports",
+    "⚙ Settings",
+]
+
 
 def inject_css() -> None:
     st.markdown(
         f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,400,0..1');
 
         :root {{
             --ink: {COLORS["ink"]};
@@ -80,7 +96,7 @@ def inject_css() -> None:
         }}
         .stApp {{
             background:
-                linear-gradient(180deg, rgba(20,108,110,.04) 0, transparent 240px),
+                linear-gradient(180deg, rgba(15,76,129,.045) 0, transparent 260px),
                 var(--background);
         }}
         h1, h2, h3 {{
@@ -88,24 +104,28 @@ def inject_css() -> None:
             letter-spacing: 0;
         }}
         [data-testid="stSidebar"] {{
-            background: #10272C;
+            background: #0B3559;
             border-right: 1px solid rgba(255,255,255,.08);
         }}
         [data-testid="stSidebar"] * {{
             color: #EAF2F2;
         }}
         [data-testid="stSidebar"] [role="radiogroup"] label {{
-            min-height: 42px;
-            padding: 7px 10px;
+            min-height: 44px;
+            padding: 8px 11px;
             border-radius: 6px;
-            transition: background .18s ease, transform .18s ease;
+            transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+        }}
+        [data-testid="stSidebar"] [role="radiogroup"] label > div:first-child {{
+            display: none;
         }}
         [data-testid="stSidebar"] [role="radiogroup"] label:hover {{
-            background: rgba(255,255,255,.08);
-            transform: translateX(2px);
+            background: rgba(255,255,255,.10);
+            transform: translateX(3px);
         }}
         [data-testid="stSidebar"] [aria-checked="true"] {{
-            background: rgba(38,154,120,.22);
+            background: rgba(23,162,184,.28);
+            box-shadow: inset 3px 0 0 #63D4E5;
         }}
         .block-container {{
             max-width: 1480px;
@@ -119,7 +139,7 @@ def inject_css() -> None:
             padding: 24px 28px;
             margin-bottom: 18px;
             color: white;
-            background: linear-gradient(112deg, #123E45 0%, #146C6E 60%, #269A78 100%);
+            background: linear-gradient(112deg, #0B3559 0%, #0F4C81 62%, #117A8B 100%);
             background-size: 180% 180%;
             border: 1px solid rgba(255,255,255,.16);
             border-radius: 8px;
@@ -168,9 +188,145 @@ def inject_css() -> None:
             height: 7px;
             margin-right: 6px;
             border-radius: 50%;
-            background: #7EF0C2;
-            box-shadow: 0 0 0 4px rgba(126,240,194,.12);
+            background: #79E6D0;
+            box-shadow: 0 0 0 4px rgba(121,230,208,.14);
             animation: pulse 1.8s infinite;
+        }}
+        .landing-hero {{
+            position: relative;
+            min-height: min(650px, 72vh);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            margin: -1.25rem -1rem 22px;
+            padding: 48px clamp(28px, 6vw, 84px);
+            color: white;
+            background-color: #0B3559;
+            background-repeat: no-repeat;
+            background-position: 92% 50%;
+            background-size: min(44vw, 520px);
+            background-blend-mode: multiply;
+            border-bottom: 5px solid #17A2B8;
+            animation: reveal .55s ease-out;
+        }}
+        .landing-hero::before {{
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(11,53,89,.80);
+        }}
+        .hero-content {{
+            position: relative;
+            z-index: 1;
+            width: min(780px, 72%);
+        }}
+        .hero-kicker {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            color: #9FE9F2;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }}
+        .hero-title {{
+            margin: 0;
+            color: white;
+            font: 700 clamp(36px, 5vw, 64px)/1.05 "Manrope", sans-serif;
+        }}
+        .hero-copy {{
+            max-width: 680px;
+            margin: 18px 0 20px;
+            color: rgba(255,255,255,.82);
+            font-size: 17px;
+            line-height: 1.65;
+        }}
+        .hero-capabilities {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            margin-top: 18px;
+            font-size: 13px;
+            font-weight: 600;
+        }}
+        .hero-capabilities span::before {{
+            content: "check_circle";
+            margin-right: 6px;
+            color: #79E6D0;
+            font-family: "Material Symbols Rounded";
+            vertical-align: -3px;
+        }}
+        .typing-line {{
+            min-height: 24px;
+            margin-top: 24px;
+            color: #9FE9F2;
+            font-size: 14px;
+            font-weight: 700;
+        }}
+        .typing-line::after {{
+            content: "Predicting readmission risk";
+            animation: typingCycle 8s infinite;
+        }}
+        .experience-band {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 0 0 24px;
+        }}
+        .experience-item {{
+            min-height: 104px;
+            padding: 18px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 7px 20px rgba(15,76,129,.06);
+        }}
+        .experience-item .material-symbols-rounded {{
+            color: var(--teal);
+            font-size: 25px;
+        }}
+        .experience-item strong {{
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+        }}
+        .experience-item small {{
+            color: var(--muted);
+        }}
+        .loading-shell {{
+            min-height: 72vh;
+            display: grid;
+            place-items: center;
+            text-align: center;
+        }}
+        .loading-mark {{
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 18px;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: #0F4C81;
+            border-radius: 8px;
+            box-shadow: 0 0 0 9px rgba(23,162,184,.12);
+            animation: loadingPulse 1.25s infinite;
+        }}
+        .loading-bar {{
+            width: min(340px, 72vw);
+            height: 6px;
+            margin-top: 20px;
+            overflow: hidden;
+            background: #D9E7F0;
+            border-radius: 3px;
+        }}
+        .loading-bar::after {{
+            content: "";
+            display: block;
+            width: 45%;
+            height: 100%;
+            background: #17A2B8;
+            animation: loadingTravel 1.1s infinite ease-in-out;
         }}
         .kpi-grid {{
             display: grid;
@@ -179,6 +335,7 @@ def inject_css() -> None:
             margin: 4px 0 20px;
         }}
         .kpi-card {{
+            position: relative;
             min-height: 112px;
             padding: 16px;
             background: rgba(255,255,255,.92);
@@ -186,11 +343,20 @@ def inject_css() -> None:
             border-top: 3px solid var(--accent);
             border-radius: 8px;
             box-shadow: 0 7px 18px rgba(21,52,59,.06);
-            transition: transform .18s ease, box-shadow .18s ease;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
         }}
         .kpi-card:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 11px 24px rgba(21,52,59,.10);
+            transform: translateY(-4px) scale(1.01);
+            border-color: color-mix(in srgb, var(--accent) 35%, white);
+            box-shadow: 0 14px 28px rgba(15,76,129,.13);
+        }}
+        .kpi-icon {{
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            color: var(--accent);
+            font-family: "Material Symbols Rounded";
+            font-size: 23px;
         }}
         .kpi-label {{
             color: var(--muted);
@@ -207,6 +373,41 @@ def inject_css() -> None:
             color: #2B7D63;
             font-size: 11px;
             font-weight: 600;
+        }}
+        .profile-card, .result-card, .download-card {{
+            min-height: 128px;
+            padding: 18px;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 8px 22px rgba(15,76,129,.07);
+            animation: reveal .35s ease-out;
+        }}
+        .profile-card strong, .result-card strong {{
+            display: block;
+            margin-bottom: 8px;
+            font: 700 18px/1.25 "Manrope", sans-serif;
+        }}
+        .profile-meta {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+        }}
+        .result-card {{
+            border-left: 5px solid var(--result);
+        }}
+        .result-label {{
+            color: var(--result);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }}
+        .result-value {{
+            margin: 8px 0;
+            color: var(--ink);
+            font: 700 34px/1 "Manrope", sans-serif;
         }}
         .section-label {{
             margin: 8px 0 12px;
@@ -249,11 +450,12 @@ def inject_css() -> None:
         }}
         .app-footer {{
             margin-top: 30px;
-            padding: 18px 0 6px;
-            border-top: 1px solid var(--line);
-            color: var(--muted);
+            padding: 24px;
+            border-top: 3px solid var(--teal);
+            color: #DCEBF5;
+            background: #0B3559;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
         }}
         div[data-testid="stMetric"] {{
             padding: 13px 14px;
@@ -267,12 +469,22 @@ def inject_css() -> None:
             border-radius: 8px;
             box-shadow: 0 6px 16px rgba(21,52,59,.04);
             overflow: hidden;
+            animation: reveal .35s ease-out;
         }}
         .stButton > button, .stDownloadButton > button {{
             min-height: 38px;
             border-radius: 6px;
             font-weight: 600;
             transition: transform .16s ease, box-shadow .16s ease;
+        }}
+        .stButton > button[kind="primary"] {{
+            color: white;
+            background: #0F4C81;
+            border-color: #0F4C81;
+        }}
+        .stButton > button[kind="primary"]:hover {{
+            background: #0B3E6A;
+            border-color: #0B3E6A;
         }}
         .stButton > button:hover, .stDownloadButton > button:hover {{
             transform: translateY(-1px);
@@ -290,8 +502,24 @@ def inject_css() -> None:
             0%, 100% {{ background-position: 0% 50%; }}
             50% {{ background-position: 100% 50%; }}
         }}
+        @keyframes typingCycle {{
+            0%, 22% {{ content: "Predicting readmission risk"; }}
+            25%, 47% {{ content: "Optimizing occupied-bed demand"; }}
+            50%, 72% {{ content: "Analyzing claims and revenue"; }}
+            75%, 100% {{ content: "Turning evidence into action"; }}
+        }}
+        @keyframes loadingPulse {{
+            0%, 100% {{ transform: scale(.96); opacity: .8; }}
+            50% {{ transform: scale(1); opacity: 1; }}
+        }}
+        @keyframes loadingTravel {{
+            from {{ transform: translateX(-110%); }}
+            to {{ transform: translateX(245%); }}
+        }}
         @media (max-width: 1100px) {{
             .kpi-grid {{ grid-template-columns: repeat(3, 1fr); }}
+            .experience-band {{ grid-template-columns: repeat(2, 1fr); }}
+            .hero-content {{ width: 82%; }}
         }}
         @media (max-width: 700px) {{
             .block-container {{ padding-left: 1rem; padding-right: 1rem; }}
@@ -299,6 +527,20 @@ def inject_css() -> None:
             .product-title {{ font-size: 24px; }}
             .kpi-grid {{ grid-template-columns: repeat(2, 1fr); }}
             .journey {{ grid-template-columns: repeat(2, 1fr); }}
+            .landing-hero {{
+                min-height: 610px;
+                margin-top: 0;
+                margin-left: -1rem;
+                margin-right: -1rem;
+                padding: 32px 22px;
+                background-position: 50% 92%;
+                background-size: 280px;
+            }}
+            .landing-hero::before {{ background: rgba(11,53,89,.88); }}
+            .hero-content {{ width: 100%; align-self: flex-start; }}
+            .hero-title {{ font-size: 38px; }}
+            .hero-copy {{ font-size: 15px; }}
+            .experience-band {{ grid-template-columns: 1fr 1fr; }}
         }}
         </style>
         """,
@@ -430,6 +672,39 @@ def section_title(title: str) -> None:
     st.markdown(f'<div class="section-label">{escape(title)}</div>', unsafe_allow_html=True)
 
 
+def asset_data_uri(path: Path) -> str:
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:image/{path.suffix.lstrip('.')};base64,{encoded}"
+
+
+def metric_icon(label: str) -> str:
+    normalized = label.lower()
+    icons = {
+        "patient": "groups",
+        "admission": "medical_services",
+        "revenue": "payments",
+        "billed": "request_quote",
+        "collected": "account_balance_wallet",
+        "leakage": "trending_down",
+        "readmission": "heart_check",
+        "occupancy": "bed",
+        "bed": "bed",
+        "available": "bedroom_parent",
+        "waiting": "schedule",
+        "doctor": "stethoscope",
+        "department": "domain",
+        "quality": "verified",
+        "success": "task_alt",
+        "payer": "health_and_safety",
+        "claim": "description",
+        "risk": "monitor_heart",
+    }
+    return next(
+        (icon for term, icon in icons.items() if term in normalized),
+        "analytics",
+    )
+
+
 def compact_number(value: float, currency: bool = False) -> str:
     prefix = "$" if currency else ""
     absolute = abs(value)
@@ -447,6 +722,7 @@ def kpi_grid(items: list[dict[str, str]]) -> None:
     for item in items:
         cards.append(
             f'<div class="kpi-card" style="--accent:{item["color"]}">'
+            f'<span class="kpi-icon">{escape(item.get("icon", metric_icon(item["label"])))}</span>'
             f'<div class="kpi-label">{escape(item["label"])}</div>'
             f'<div class="kpi-value">{escape(item["value"])}</div>'
             f'<div class="kpi-delta">{escape(item["delta"])}</div>'
@@ -455,17 +731,41 @@ def kpi_grid(items: list[dict[str, str]]) -> None:
     st.markdown(f'<div class="kpi-grid">{"".join(cards)}</div>', unsafe_allow_html=True)
 
 
+def result_card(
+    label: str,
+    value: str,
+    detail: str,
+    color: str,
+) -> None:
+    st.markdown(
+        f"""
+        <div class="result-card" style="--result:{escape(color)}">
+            <div class="result-label">{escape(label)}</div>
+            <div class="result-value">{escape(value)}</div>
+            <div>{escape(detail)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def style_figure(fig, height: int = 350):
-    fig.update_layout(
+    layout = dict(
         height=height,
         margin=dict(l=18, r=18, t=52, b=18),
         paper_bgcolor="white",
         plot_bgcolor="white",
         font=dict(family="Inter", color=COLORS["ink"], size=11),
-        title_font=dict(family="Manrope", size=15, color=COLORS["ink"]),
         legend_title_text="",
         hoverlabel=dict(bgcolor="white", font_size=12),
     )
+    if fig.layout.title.text:
+        layout["title_font"] = dict(
+            family="Manrope",
+            size=15,
+            color=COLORS["ink"],
+        )
+    fig.update_layout(**layout)
     fig.update_xaxes(gridcolor="#EDF1F2", zeroline=False)
     fig.update_yaxes(gridcolor="#EDF1F2", zeroline=False)
     return fig
@@ -674,11 +974,107 @@ def risk_gauge(probability: float, title: str) -> go.Figure:
     )
 
 
+def home_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
+    features, billing = data["features"], data["billing"]
+    logo_uri = asset_data_uri(LOGO)
+    st.markdown(
+        f"""
+        <section class="landing-hero" style="background-image:url('{logo_uri}')">
+            <div class="hero-content">
+                <div class="hero-kicker">
+                    <span class="material-symbols-rounded">health_metrics</span>
+                    Hospital operations command center
+                </div>
+                <h1 class="hero-title">Hospital Operations Intelligence Platform</h1>
+                <p class="hero-copy">
+                    AI-powered healthcare decision support for safer patient flow,
+                    stronger resource planning, and accountable financial performance.
+                </p>
+                <div class="hero-capabilities">
+                    <span>Predictive analytics</span>
+                    <span>Machine learning</span>
+                    <span>SQL intelligence</span>
+                    <span>Executive dashboards</span>
+                </div>
+                <div class="typing-line"></div>
+            </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.button(
+        "Launch Executive Dashboard",
+        type="primary",
+        icon=":material/arrow_forward:",
+        on_click=lambda: st.session_state.update(
+            active_page="📈 Executive Dashboard"
+        ),
+    )
+
+    st.markdown(
+        """
+        <div class="experience-band">
+            <div class="experience-item">
+                <span class="material-symbols-rounded">monitoring</span>
+                <strong>Executive intelligence</strong>
+                <small>KPIs, trends, thresholds, and accountable actions</small>
+            </div>
+            <div class="experience-item">
+                <span class="material-symbols-rounded">bed</span>
+                <strong>Capacity planning</strong>
+                <small>Observed census and occupied-bed forecasts</small>
+            </div>
+            <div class="experience-item">
+                <span class="material-symbols-rounded">monitor_heart</span>
+                <strong>Risk decision support</strong>
+                <small>Registered models with transparent explanations</small>
+            </div>
+            <div class="experience-item">
+                <span class="material-symbols-rounded">account_balance</span>
+                <strong>Financial control</strong>
+                <small>Collections, claims, payer mix, and leakage</small>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    occupancy = calculate_historical_occupancy(features, capacity)
+    kpi_grid(
+        [
+            {
+                "label": "Patients served",
+                "value": compact_number(features["patient_id"].nunique()),
+                "delta": f"{len(features):,} admissions analyzed",
+                "color": COLORS["blue"],
+            },
+            {
+                "label": "30-day readmission",
+                "value": f"{features['readmitted_30d'].mean():.1%}",
+                "delta": "Observed outcome",
+                "color": COLORS["coral"],
+            },
+            {
+                "label": "Collected revenue",
+                "value": compact_number(billing["paid_amount"].sum(), currency=True),
+                "delta": "Observed receipts",
+                "color": COLORS["green"],
+            },
+            {
+                "label": "Bed occupancy",
+                "value": f"{occupancy.tail(30)['occupancy_pct'].mean():.1f}%",
+                "delta": f"{capacity:,} configured beds",
+                "color": COLORS["teal"],
+            },
+        ]
+    )
+
+
 def executive_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
     features, billing = data["features"], data["billing"]
     page_header(
-        "Hospital Operations Intelligence Platform",
-        "AI-driven healthcare analytics for faster, safer operational decisions.",
+        "Executive Operations Dashboard",
+        "Monitor patient flow, outcomes, capacity, and financial performance from one command center.",
         "Executive dashboard",
     )
     monthly = (
@@ -771,7 +1167,7 @@ def executive_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         )
         st.plotly_chart(style_figure(fig), width="stretch")
 
-    left, right = st.columns([1, 1.35])
+    left, center, right = st.columns([0.9, 1.3, 0.9])
     with left:
         admission_mix = features.groupby("admit_type", as_index=False).size()
         fig = px.pie(
@@ -783,7 +1179,7 @@ def executive_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
             color_discrete_sequence=CHART_COLORS,
         )
         st.plotly_chart(style_figure(fig), width="stretch")
-    with right:
+    with center:
         fig = px.area(
             monthly_revenue,
             x="claim_billing_date",
@@ -792,15 +1188,72 @@ def executive_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
             color_discrete_sequence=[COLORS["green"]],
         )
         st.plotly_chart(style_figure(fig), width="stretch")
-
-    if not data["insights"].empty:
-        section_title("Operational intelligence")
-        for insight in data["insights"].itertuples(index=False):
-            st.markdown(
-                f'<div class="insight-row"><strong>{escape(str(insight.reliability))}</strong> · '
-                f'{escape(str(insight.insight))}<br><small>{escape(str(insight.decision_use))}</small></div>',
-                unsafe_allow_html=True,
+    with right:
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=current_occupancy,
+                number={"suffix": "%"},
+                title={"text": "30-day bed utilization"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": COLORS["teal"]},
+                    "steps": [
+                        {"range": [0, 70], "color": "#E8F5EF"},
+                        {"range": [70, 85], "color": "#FFF2C2"},
+                        {"range": [85, 100], "color": "#F8D7DA"},
+                    ],
+                    "threshold": {
+                        "line": {"color": COLORS["coral"], "width": 3},
+                        "value": 85,
+                    },
+                },
             )
+        )
+        st.plotly_chart(style_figure(fig), width="stretch")
+
+    left, right = st.columns([1, 1.25])
+    with left:
+        flow = pd.DataFrame(
+            {
+                "stage": [
+                    "Admissions",
+                    "Unique patients",
+                    "High-complexity encounters",
+                    "30-day readmissions",
+                ],
+                "volume": [
+                    len(features),
+                    features["patient_id"].nunique(),
+                    int(
+                        (
+                            features["patient_complexity_index"]
+                            >= features["patient_complexity_index"].quantile(0.75)
+                        ).sum()
+                    ),
+                    int(features["readmitted_30d"].sum()),
+                ],
+            }
+        )
+        fig = px.funnel(
+            flow,
+            x="volume",
+            y="stage",
+            title="Patient flow and risk funnel",
+            color_discrete_sequence=[COLORS["blue"]],
+        )
+        st.plotly_chart(style_figure(fig, 340), width="stretch")
+    with right:
+        section_title("Operational intelligence")
+        if data["insights"].empty:
+            st.info("Run the reporting pipeline to generate governed insights.")
+        else:
+            for insight in data["insights"].itertuples(index=False):
+                st.markdown(
+                    f'<div class="insight-row"><strong>{escape(str(insight.reliability))}</strong> · '
+                    f'{escape(str(insight.insight))}<br><small>{escape(str(insight.decision_use))}</small></div>',
+                    unsafe_allow_html=True,
+                )
 
 
 def patient_page(data: dict[str, pd.DataFrame]) -> None:
@@ -845,17 +1298,30 @@ def patient_page(data: dict[str, pd.DataFrame]) -> None:
         else "LOW"
     )
     risk_css = {"HIGH": "risk-high", "MEDIUM": "risk-medium", "LOW": "risk-low"}[risk_class]
-    cols = st.columns(6)
-    values = [
-        ("Age", f"{int(latest['age'])}"),
-        ("Gender", str(latest["gender"])),
-        ("Insurance", str(latest["insurance_category"])),
-        ("Prior admissions", f"{int(latest['previous_admissions'])}"),
-        ("Complexity index", f"{latest['patient_complexity_index']:.1f}"),
-        ("Risk group", risk_class),
-    ]
-    for col, (label, value) in zip(cols, values):
-        col.metric(label, value)
+    st.markdown(
+        f"""
+        <div class="profile-card">
+            <strong>Patient {escape(selected)}</strong>
+            <div class="profile-meta">
+                <span>Latest admission: {escape(str(latest["admit_type"]))}</span>
+                <span>Ward: {escape(str(latest["ward_type"]))}</span>
+                <span>Department: {escape(str(latest["department"]))}</span>
+                <span>Doctor: {escape(doctor_alias(str(latest["doctor_id"])))}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    kpi_grid(
+        [
+            {"label": "Patient age", "value": str(int(latest["age"])), "delta": str(latest["age_group"]), "color": COLORS["blue"]},
+            {"label": "Gender", "value": str(latest["gender"]), "delta": "Derived demographic", "color": COLORS["teal"]},
+            {"label": "Insurance", "value": str(latest["insurance_category"]), "delta": "Derived category", "color": COLORS["green"]},
+            {"label": "Prior admissions", "value": str(int(latest["previous_admissions"])), "delta": "Before latest encounter", "color": COLORS["gold"]},
+            {"label": "Complexity index", "value": f"{latest['patient_complexity_index']:.1f}", "delta": "Operational composite", "color": COLORS["teal"]},
+            {"label": "Risk group", "value": risk_class, "delta": "Screening classification", "color": {"HIGH": COLORS["coral"], "MEDIUM": COLORS["gold"], "LOW": COLORS["green"]}[risk_class]},
+        ]
+    )
     st.markdown(
         f'<div class="{risk_css}">Current operational risk classification: {risk_class}</div>',
         unsafe_allow_html=True,
@@ -1003,6 +1469,30 @@ def doctor_page(data: dict[str, pd.DataFrame]) -> None:
     )
     filtered = doctors[doctors["department"].isin(department_filter)]
 
+    section_title("Performance leaders")
+    leader_columns = st.columns(3)
+    for column, doctor in zip(
+        leader_columns,
+        filtered.nlargest(3, "quality_score").itertuples(index=False),
+    ):
+        with column:
+            st.markdown(
+                f"""
+                <div class="profile-card">
+                    <strong>{escape(str(doctor.doctor))}</strong>
+                    <div class="profile-meta">
+                        <span>{escape(str(doctor.department))}</span>
+                        <span>Score {doctor.quality_score:.0f}/100</span>
+                        <span>{int(doctor.patients):,} patients</span>
+                        <span>{doctor.readmission_rate:.1%} readmission</span>
+                        <span>{compact_number(doctor.revenue, currency=True)} revenue</span>
+                        <span>{doctor.average_treatment_days:.1f} day LOS</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
     left, right = st.columns([1.25, 1])
     with left:
         leaderboard = filtered.nlargest(12, "quality_score").sort_values("quality_score")
@@ -1116,29 +1606,41 @@ def department_page(data: dict[str, pd.DataFrame]) -> None:
     )
     left, right = st.columns([1.2, 1])
     with left:
-        fig = px.bar(
-            department.sort_values("revenue"),
-            x="revenue",
-            y="department",
-            color="success_rate",
-            orientation="h",
-            title="Revenue and outcome ranking",
-            color_continuous_scale=["#E7B2A6", "#E9D18D", "#86CDB3"],
+        fig = px.treemap(
+            department,
+            path=["department"],
+            values="admissions",
+            color="revenue",
+            hover_data=["average_los", "average_wait", "success_rate"],
+            title="Department scale and revenue contribution",
+            color_continuous_scale=["#DCEEF8", COLORS["teal"], COLORS["blue"]],
         )
         st.plotly_chart(style_figure(fig, 410), width="stretch")
     with right:
-        matrix = department.set_index("department")[
-            ["admissions", "revenue", "average_los", "average_wait", "success_rate"]
-        ]
-        normalized = (matrix - matrix.min()) / (matrix.max() - matrix.min())
-        fig = px.imshow(
-            normalized,
-            text_auto=".2f",
-            aspect="auto",
-            color_continuous_scale=["#F4F7F8", "#70B7A3", "#146C6E"],
-            title="Department performance matrix",
+        fig = px.scatter(
+            department,
+            x="admissions",
+            y="average_los",
+            size="revenue",
+            color="success_rate",
+            hover_name="department",
+            title="Volume, stay, revenue, and outcomes",
+            color_continuous_scale=["#F8D7DA", "#FFF2C2", "#D8F0E0"],
         )
         st.plotly_chart(style_figure(fig, 410), width="stretch")
+
+    matrix = department.set_index("department")[
+        ["admissions", "revenue", "average_los", "average_wait", "success_rate"]
+    ]
+    normalized = (matrix - matrix.min()) / (matrix.max() - matrix.min())
+    fig = px.imshow(
+        normalized,
+        text_auto=".2f",
+        aspect="auto",
+        color_continuous_scale=["#F4F9FC", "#6EC5D2", "#0F4C81"],
+        title="Normalized department performance heatmap",
+    )
+    st.plotly_chart(style_figure(fig, 390), width="stretch")
 
     ward = features.groupby("ward_type", as_index=False).agg(
         admissions=("admission_id", "count"),
@@ -1246,12 +1748,25 @@ def bed_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         st.plotly_chart(style_figure(fig, 400), width="stretch")
 
     if not forecast.empty:
+        horizon = st.segmented_control(
+            "Forecast horizon",
+            ["Today", "Tomorrow", "7 days", "30 days"],
+            default="30 days",
+        )
+        horizon_days = {
+            "Today": 1,
+            "Tomorrow": 2,
+            "7 days": 7,
+            "30 days": 30,
+        }
+        forecast_view = forecast.head(horizon_days[horizon])
         fig = px.line(
-            forecast,
+            forecast_view,
             x="forecast_date",
             y="display_occupancy_pct",
-            title="ML occupancy forecast · next 90 days",
+            title=f"ML occupancy forecast · {horizon.lower()}",
             color_discrete_sequence=[COLORS["blue"]],
+            markers=True,
         )
         fig.update_traces(line_width=2.5)
         st.plotly_chart(style_figure(fig, 360), width="stretch")
@@ -1434,7 +1949,10 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
         else:
             with st.form("readmission_prediction"):
                 row, _ = model_input_form(features, "readmission")
-                submit = st.form_submit_button("Analyze readmission risk")
+                submit = st.form_submit_button(
+                    "Analyze readmission risk",
+                    type="primary",
+                )
             if submit:
                 probability = float(
                     readmission_model.predict_proba(
@@ -1448,8 +1966,27 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
                     fig = risk_gauge(probability, "30-day probability")
                     st.plotly_chart(style_figure(fig, 310), width="stretch")
                 with right:
-                    st.metric("Risk classification", label)
-                    st.metric("Estimated probability", f"{probability:.1%}")
+                    risk_color = (
+                        COLORS["coral"]
+                        if label == "HIGH RISK"
+                        else COLORS["gold"]
+                        if label == "MONITOR"
+                        else COLORS["green"]
+                    )
+                    recommendation = (
+                        "Prioritize discharge review and schedule follow-up."
+                        if label == "HIGH RISK"
+                        else "Review risk factors and monitor after discharge."
+                        if label == "MONITOR"
+                        else "Continue standard follow-up protocol."
+                    )
+                    result_card(
+                        "Readmission classification",
+                        label,
+                        f"{probability:.1%} estimated probability",
+                        risk_color,
+                    )
+                    st.success(recommendation)
                     st.info(
                         "Use this score to prioritize review and discharge follow-up. It does not replace clinical judgment."
                     )
@@ -1459,13 +1996,21 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
         else:
             with st.form("waiting_prediction"):
                 row, _ = model_input_form(features, "waiting")
-                submit = st.form_submit_button("Estimate waiting time")
+                submit = st.form_submit_button(
+                    "Estimate waiting time",
+                    type="primary",
+                )
             if submit:
                 prediction = max(
                     0.0,
                     float(waiting_model.predict(row[model_columns(waiting_model)])[0]),
                 )
-                st.metric("Simulated waiting time", f"{prediction:.0f} minutes")
+                result_card(
+                    "Waiting-time scenario",
+                    f"{prediction:.0f} minutes",
+                    "Estimated service delay for the selected operational scenario",
+                    COLORS["gold"],
+                )
                 st.warning(
                     "The source has no observed queue timestamps. This is a workflow simulation, not an operational forecast."
                 )
@@ -1482,17 +2027,38 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
         else:
             with st.form("revenue_prediction"):
                 row, volume = model_input_form(features, "revenue", include_volume=True)
-                submit = st.form_submit_button("Forecast revenue scenario")
+                submit = st.form_submit_button(
+                    "Forecast revenue scenario",
+                    type="primary",
+                )
             if submit:
                 per_admission = max(
                     0.0,
                     float(revenue_model.predict(row[model_columns(revenue_model)])[0]),
                 )
                 total = per_admission * volume
-                first, second, third = st.columns(3)
-                first.metric("Per-admission revenue", f"${per_admission:,.0f}")
-                second.metric("Patient volume", f"{volume:,}")
-                third.metric("Expected revenue", f"${total:,.0f}")
+                kpi_grid(
+                    [
+                        {
+                            "label": "Revenue per admission",
+                            "value": f"${per_admission:,.0f}",
+                            "delta": "Modeled scenario value",
+                            "color": COLORS["teal"],
+                        },
+                        {
+                            "label": "Patient volume",
+                            "value": f"{volume:,}",
+                            "delta": "Selected planning volume",
+                            "color": COLORS["blue"],
+                        },
+                        {
+                            "label": "Expected revenue",
+                            "value": f"${total:,.0f}",
+                            "delta": "Scenario total",
+                            "color": COLORS["green"],
+                        },
+                    ]
+                )
                 st.warning(
                     "Admission-level revenue uses a surrogate claims link and simulated values where no linked claim exists. Treat this as a planning scenario."
                 )
@@ -1775,15 +2341,53 @@ def assistant_panel(data: dict[str, pd.DataFrame], capacity: int) -> None:
         st.rerun()
 
 
+def assistant_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
+    page_header(
+        "Healthcare Operations Assistant",
+        "Investigate hospital performance using answers grounded in the loaded analytics tables.",
+        "Conversational intelligence",
+    )
+    prompts = st.columns(4)
+    examples = [
+        ("Bed pressure", "Show ICU occupancy and weekend pressure."),
+        ("Readmissions", "Which ward has the highest readmission rate?"),
+        ("Revenue", "Where is claims revenue leaking?"),
+        ("Workload", "Which doctor has the largest derived workload?"),
+    ]
+    for column, (title, prompt) in zip(prompts, examples):
+        with column:
+            st.markdown(
+                f"""
+                <div class="experience-item">
+                    <span class="material-symbols-rounded">forum</span>
+                    <strong>{escape(title)}</strong>
+                    <small>{escape(prompt)}</small>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+    assistant_panel(data, capacity)
+
+
 def reports_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
     page_header(
-        "Reports and Assistant",
-        "Generate executive reporting, download governed outputs, and ask operational questions.",
+        "Report Center",
+        "Generate executive reporting and download governed analytical outputs.",
         "Decision distribution",
     )
     left, right = st.columns([1, 1.4])
     with left:
         section_title("Executive report")
+        st.markdown(
+            """
+            <div class="download-card">
+                <span class="material-symbols-rounded">picture_as_pdf</span>
+                <strong>Executive decision pack</strong><br>
+                <small>KPIs, trends, thresholds, owners, and management actions</small>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         pdf_path = REPORTS / "executive_report.pdf"
         if st.button("Refresh executive PDF", type="primary", width="stretch"):
             with st.spinner("Analyzing hospital data and building the report..."):
@@ -1827,7 +2431,6 @@ def reports_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
             file_name=selected_path.name,
             width="stretch",
         )
-    assistant_panel(data, capacity)
 
 
 def settings_page(data: dict[str, pd.DataFrame]) -> None:
@@ -1915,8 +2518,9 @@ def footer() -> None:
     st.markdown(
         """
         <footer class="app-footer">
-            Hospital Operations Intelligence Platform · Python · SQL · Machine Learning · Power BI · Streamlit<br>
-            AI-driven healthcare decisions with transparent operational assumptions
+            <strong>Hospital Operations Intelligence Platform</strong><br>
+            Python &nbsp;|&nbsp; MySQL &nbsp;|&nbsp; Machine Learning &nbsp;|&nbsp; Power BI &nbsp;|&nbsp; Streamlit<br><br>
+            Developed by Suhani Chauhan &nbsp;|&nbsp; Governed analytics with transparent operational assumptions
         </footer>
         """,
         unsafe_allow_html=True,
@@ -1932,31 +2536,40 @@ def main() -> None:
             float(config_value("high_risk_threshold")) * 100
         )
 
-    with st.spinner("Loading hospital intelligence..."):
+    loading_slot = st.empty()
+    if not st.session_state.get("platform_loaded"):
+        loading_slot.markdown(
+            """
+            <div class="loading-shell">
+                <div>
+                    <div class="loading-mark">
+                        <span class="material-symbols-rounded">health_metrics</span>
+                    </div>
+                    <h2>Loading Hospital Analytics</h2>
+                    <p>Preparing governed KPIs, forecasts, and model artifacts...</p>
+                    <div class="loading-bar"></div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with st.spinner("Loading hospital intelligence...", show_time=True):
         data = load_platform_data()
+    st.session_state.platform_loaded = True
+    loading_slot.empty()
     if data["features"].empty:
         st.error("Processed hospital data is unavailable. Run `python src/data_pipeline.py`.")
         st.stop()
 
     with st.sidebar:
-        st.image(str(LOGO), width=92)
-        st.markdown("### Hospital AI Platform")
+        st.image(str(LOGO), width=82)
+        st.markdown("### Hospital AI")
         st.caption("Operations command center")
         page = st.radio(
             "Navigation",
-            [
-                "📊 Executive Dashboard",
-                "👥 Patient Analytics",
-                "🩺 Doctor Performance",
-                "🏢 Department Intelligence",
-                "🛏 Bed Occupancy",
-                "💰 Revenue Analytics",
-                "🤖 AI Predictions",
-                "🔍 Explainable AI",
-                "📄 Reports",
-                "⚙️ Settings",
-            ],
+            NAVIGATION,
             label_visibility="collapsed",
+            key="active_page",
         )
         st.divider()
         st.caption(
@@ -1966,16 +2579,18 @@ def main() -> None:
 
     capacity = int(st.session_state.bed_capacity)
     routes = {
-        "📊 Executive Dashboard": lambda: executive_page(data, capacity),
-        "👥 Patient Analytics": lambda: patient_page(data),
-        "🩺 Doctor Performance": lambda: doctor_page(data),
-        "🏢 Department Intelligence": lambda: department_page(data),
-        "🛏 Bed Occupancy": lambda: bed_page(data, capacity),
+        "🏠 Home": lambda: home_page(data, capacity),
+        "📈 Executive Dashboard": lambda: executive_page(data, capacity),
+        "👥 Patient Intelligence": lambda: patient_page(data),
+        "🩺 Doctor Analytics": lambda: doctor_page(data),
+        "🏢 Department Insights": lambda: department_page(data),
+        "🛏 Bed Management": lambda: bed_page(data, capacity),
         "💰 Revenue Analytics": lambda: revenue_page(data),
-        "🤖 AI Predictions": lambda: predictions_page(data),
-        "🔍 Explainable AI": lambda: explainability_page(data),
+        "🤖 AI Prediction Center": lambda: predictions_page(data),
+        "📊 Explainable AI": lambda: explainability_page(data),
+        "💬 Healthcare Assistant": lambda: assistant_page(data, capacity),
         "📄 Reports": lambda: reports_page(data, capacity),
-        "⚙️ Settings": lambda: settings_page(data),
+        "⚙ Settings": lambda: settings_page(data),
     }
     routes[page]()
     footer()
