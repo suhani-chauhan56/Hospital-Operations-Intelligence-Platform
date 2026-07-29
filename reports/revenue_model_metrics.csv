@@ -1,0 +1,7 @@
+model,RMSE,MAE,MAPE,R2,split_strategy,train_rows,test_rows,train_patients,test_patients,patient_overlap,target_origin
+catboost,2890.7874384806514,2288.811489465662,144.34796331066218,0.14425953225938615,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated
+xgboost,2893.9522914694007,2288.746091785584,144.6466794639611,0.14238476604920303,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated
+gradient_boosting,2896.5017743134485,2289.9084100296755,144.52590848359844,0.14087303522978878,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated
+stacking_regressor,2903.288007987457,2289.2168020437707,144.94134689352893,0.13684261050125002,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated
+lightgbm,2915.6350496379105,2290.5322285800803,145.44694087972303,0.1294853644563958,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated
+random_forest,2921.9926180956127,2303.098976566194,145.6402848333045,0.1256848955009019,GroupShuffleSplit(patient_id),24032,5968,20353,5089,0,mixed_surrogate_and_simulated

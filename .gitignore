@@ -28,6 +28,7 @@ datasets/processed/*
 !datasets/processed/model_features.csv.gz
 !datasets/processed/billing.csv.gz
 !datasets/processed/claims.csv.gz
+!datasets/processed/insurance.csv.gz
 !datasets/processed/labs.csv.gz
 !datasets/processed/medicines.csv.gz
 !models/readmission.pkl
@@ -39,5 +40,10 @@ datasets/processed/*
 !reports/readmission_shap_importance.csv
 !reports/revenue_shap_importance.csv
 !reports/patient_readmission_explanations.csv
+!reports/readmission_model_metrics.csv
+!reports/waiting_model_metrics.csv
+!reports/revenue_model_metrics.csv
+!reports/occupancy_model_metrics.csv
+!reports/occupancy_forecast.csv
 !reports/executive_report.pdf
 !reports/mysql_deployment_status.json

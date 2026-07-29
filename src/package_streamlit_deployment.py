@@ -15,6 +15,7 @@ DEPLOYMENT_TABLES = (
     "model_features",
     "billing",
     "claims",
+    "insurance",
     "labs",
     "medicines",
 )
@@ -29,6 +30,11 @@ REQUIRED_ARTIFACTS = (
     REPORTS / "readmission_shap_importance.csv",
     REPORTS / "revenue_shap_importance.csv",
     REPORTS / "patient_readmission_explanations.csv",
+    REPORTS / "readmission_model_metrics.csv",
+    REPORTS / "waiting_model_metrics.csv",
+    REPORTS / "revenue_model_metrics.csv",
+    REPORTS / "occupancy_model_metrics.csv",
+    REPORTS / "occupancy_forecast.csv",
     REPORTS / "executive_report.pdf",
 )
 

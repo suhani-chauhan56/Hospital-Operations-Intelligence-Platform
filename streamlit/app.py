@@ -2391,7 +2391,7 @@ def reports_page(data: dict[str, pd.DataFrame], capacity: int) -> None:
         pdf_path = REPORTS / "executive_report.pdf"
         if st.button("Refresh executive PDF", type="primary", width="stretch"):
             with st.spinner("Analyzing hospital data and building the report..."):
-                from src.generate_executive_report import main as generate_report
+                from generate_executive_report import main as generate_report
 
                 generate_report()
             st.success("Executive report refreshed.")

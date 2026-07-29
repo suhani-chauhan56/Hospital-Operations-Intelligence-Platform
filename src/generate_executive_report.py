@@ -30,6 +30,18 @@ LINE = "#DCE5E7"
 SURFACE = "#F4F7F8"
 
 
+def read_processed_table(
+    name: str,
+    **kwargs,
+) -> pd.DataFrame:
+    candidates = [DATA / f"{name}.csv.gz", DATA / f"{name}.csv"]
+    for path in candidates:
+        if path.exists():
+            return pd.read_csv(path, **kwargs)
+    expected = " or ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"Required report source is missing: {expected}")
+
+
 def money(value: float) -> str:
     if abs(value) >= 1_000_000:
         return f"${value / 1_000_000:.1f}M"
@@ -152,15 +164,16 @@ def load_metrics() -> dict[str, pd.DataFrame]:
 
 
 def main() -> None:
-    features = pd.read_csv(
-        DATA / "model_features.csv",
+    features = read_processed_table(
+        "model_features",
         parse_dates=["admit_date", "discharge_date"],
     )
-    billing = pd.read_csv(
-        DATA / "billing.csv", parse_dates=["claim_billing_date"]
+    billing = read_processed_table(
+        "billing",
+        parse_dates=["claim_billing_date"],
     )
-    claims = pd.read_csv(DATA / "claims.csv")
-    insurance = pd.read_csv(DATA / "insurance.csv")
+    claims = read_processed_table("claims")
+    insurance = read_processed_table("insurance")
     forecast = pd.read_csv(REPORTS / "occupancy_forecast.csv")
     model_metrics = load_metrics()
     thresholds = config_value("executive_monitoring_thresholds")

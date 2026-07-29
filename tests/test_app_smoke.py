@@ -36,6 +36,25 @@ def test_prediction_forms_execute():
         assert not app.exception
 
 
+def test_executive_report_refreshes():
+    app = AppTest.from_file(
+        str(ROOT / "streamlit" / "app.py"),
+        default_timeout=90,
+    ).run()
+    reports_page = next(
+        option for option in app.radio[0].options if "Reports" in option
+    )
+    app.radio[0].set_value(reports_page).run()
+    refresh = next(
+        button
+        for button in app.button
+        if button.label == "Refresh executive PDF"
+    )
+    refresh.click().run()
+    assert not app.exception
+    assert (ROOT / "reports" / "executive_report.pdf").exists()
+
+
 def test_assistant_handles_patient_status_and_recovery_questions():
     patient_id = str(
         pd.read_csv(

@@ -1,0 +1,2 @@
+model,RMSE,MAE,MAPE,R2,split_strategy,target_origin,capacity_assumption
+XGBRegressor,7.979840864842142,6.375323616101091,0.024996458931507606,0.6892610066766156,chronological_80_20,observed_active_census,500
