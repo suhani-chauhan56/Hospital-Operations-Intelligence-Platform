@@ -73,21 +73,46 @@ NAVIGATION = [
 ]
 
 
+def current_theme_type() -> str:
+    try:
+        return "dark" if st.context.theme.type == "dark" else "light"
+    except Exception:
+        return "light"
+
+
 def inject_css() -> None:
+    is_dark = current_theme_type() == "dark"
+    theme = {
+        "ink": "#EAF3F8" if is_dark else COLORS["ink"],
+        "muted": "#AFC1CC" if is_dark else COLORS["muted"],
+        "line": "#315064" if is_dark else COLORS["line"],
+        "surface": "#122A3A" if is_dark else COLORS["surface"],
+        "surface_soft": "#19384A" if is_dark else "#EEF5F5",
+        "card": "rgba(18,42,58,.96)" if is_dark else "rgba(255,255,255,.94)",
+        "background": "#081823" if is_dark else COLORS["background"],
+        "positive": "#76D6AD" if is_dark else "#2B7D63",
+        "shadow": "rgba(0,0,0,.28)" if is_dark else "rgba(21,52,59,.06)",
+        "color_scheme": "dark" if is_dark else "light",
+    }
     st.markdown(
         f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700&family=Material+Symbols+Rounded:opsz,wght,FILL@20..48,400,0..1');
 
         :root {{
-            --ink: {COLORS["ink"]};
-            --muted: {COLORS["muted"]};
+            color-scheme: {theme["color_scheme"]};
+            --ink: {theme["ink"]};
+            --muted: {theme["muted"]};
             --teal: {COLORS["teal"]};
             --green: {COLORS["green"]};
             --coral: {COLORS["coral"]};
-            --line: {COLORS["line"]};
-            --surface: {COLORS["surface"]};
-            --background: {COLORS["background"]};
+            --line: {theme["line"]};
+            --surface: {theme["surface"]};
+            --surface-soft: {theme["surface_soft"]};
+            --card: {theme["card"]};
+            --background: {theme["background"]};
+            --positive: {theme["positive"]};
+            --panel-shadow: {theme["shadow"]};
         }}
         html, body, [class*="css"] {{
             font-family: "Inter", sans-serif;
@@ -277,10 +302,10 @@ def inject_css() -> None:
         .experience-item {{
             min-height: 104px;
             padding: 18px;
-            background: white;
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 8px;
-            box-shadow: 0 7px 20px rgba(15,76,129,.06);
+            box-shadow: 0 7px 20px var(--panel-shadow);
         }}
         .experience-item .material-symbols-rounded {{
             color: var(--teal);
@@ -317,7 +342,7 @@ def inject_css() -> None:
             height: 6px;
             margin-top: 20px;
             overflow: hidden;
-            background: #D9E7F0;
+            background: var(--line);
             border-radius: 3px;
         }}
         .loading-bar::after {{
@@ -341,16 +366,16 @@ def inject_css() -> None:
             position: relative;
             min-height: 112px;
             padding: 16px;
-            background: rgba(255,255,255,.92);
+            background: var(--card);
             border: 1px solid var(--line);
             border-top: 3px solid var(--accent);
             border-radius: 8px;
-            box-shadow: 0 7px 18px rgba(21,52,59,.06);
+            box-shadow: 0 7px 18px var(--panel-shadow);
             transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
         }}
         .kpi-card:hover {{
             transform: translateY(-4px) scale(1.01);
-            border-color: color-mix(in srgb, var(--accent) 35%, white);
+            border-color: color-mix(in srgb, var(--accent) 35%, var(--surface));
             box-shadow: 0 14px 28px rgba(15,76,129,.13);
         }}
         .kpi-icon {{
@@ -373,17 +398,17 @@ def inject_css() -> None:
         }}
         .kpi-delta {{
             margin-top: 8px;
-            color: #2B7D63;
+            color: var(--positive);
             font-size: 11px;
             font-weight: 600;
         }}
         .profile-card, .result-card, .download-card {{
             min-height: 128px;
             padding: 18px;
-            background: white;
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 8px;
-            box-shadow: 0 8px 22px rgba(15,76,129,.07);
+            box-shadow: 0 8px 22px var(--panel-shadow);
             animation: reveal .35s ease-out;
         }}
         .profile-card strong, .result-card strong {{
@@ -420,7 +445,7 @@ def inject_css() -> None:
         .insight-row {{
             padding: 12px 0;
             border-bottom: 1px solid var(--line);
-            color: #304149;
+            color: var(--ink);
             font-size: 13px;
         }}
         .risk-high {{ color: #B64532; font-weight: 700; }}
@@ -436,19 +461,19 @@ def inject_css() -> None:
             position: relative;
             padding: 11px 8px;
             text-align: center;
-            color: #365057;
-            background: #EEF5F5;
-            border: 1px solid #D3E3E3;
+            color: var(--ink);
+            background: var(--surface-soft);
+            border: 1px solid var(--line);
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
         }}
         .assistant-note {{
             padding: 12px 14px;
-            background: #EEF6F4;
+            background: var(--surface-soft);
             border-left: 3px solid var(--green);
             border-radius: 0 6px 6px 0;
-            color: #31504B;
+            color: var(--ink);
             font-size: 12px;
         }}
         .app-footer {{
@@ -462,15 +487,15 @@ def inject_css() -> None:
         }}
         div[data-testid="stMetric"] {{
             padding: 13px 14px;
-            background: rgba(255,255,255,.94);
+            background: var(--card);
             border: 1px solid var(--line);
             border-radius: 8px;
         }}
         div[data-testid="stPlotlyChart"], div[data-testid="stDataFrame"] {{
-            background: white;
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 8px;
-            box-shadow: 0 6px 16px rgba(21,52,59,.04);
+            box-shadow: 0 6px 16px var(--panel-shadow);
             overflow: hidden;
             animation: reveal .35s ease-out;
         }}
@@ -774,24 +799,33 @@ def result_card(
 
 
 def style_figure(fig, height: int = 350):
+    is_dark = current_theme_type() == "dark"
+    chart_surface = "#122A3A" if is_dark else "#FFFFFF"
+    chart_ink = "#EAF3F8" if is_dark else COLORS["ink"]
+    chart_grid = "#29465A" if is_dark else "#EDF1F2"
+    hover_surface = "#19384A" if is_dark else "#FFFFFF"
     layout = dict(
         height=height,
         margin=dict(l=18, r=18, t=52, b=18),
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(family="Inter", color=COLORS["ink"], size=11),
+        paper_bgcolor=chart_surface,
+        plot_bgcolor=chart_surface,
+        font=dict(family="Inter", color=chart_ink, size=11),
         legend_title_text="",
-        hoverlabel=dict(bgcolor="white", font_size=12),
+        hoverlabel=dict(
+            bgcolor=hover_surface,
+            bordercolor=chart_grid,
+            font=dict(color=chart_ink, size=12),
+        ),
     )
     if fig.layout.title.text:
         layout["title_font"] = dict(
             family="Manrope",
             size=15,
-            color=COLORS["ink"],
+            color=chart_ink,
         )
     fig.update_layout(**layout)
-    fig.update_xaxes(gridcolor="#EDF1F2", zeroline=False)
-    fig.update_yaxes(gridcolor="#EDF1F2", zeroline=False)
+    fig.update_xaxes(gridcolor=chart_grid, zeroline=False)
+    fig.update_yaxes(gridcolor=chart_grid, zeroline=False)
     return fig
 
 

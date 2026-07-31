@@ -71,6 +71,7 @@ accountable action.
   from calculating the same metric differently
 - ✅ **Patient ID risk workflow:** scores a selected patient through the
   registered readmission pipeline
+- ✅ **Adaptive product UI:** responsive desktop/mobile layouts with readable light and dark themes
 - ✅ **Explainable predictions:** local model contributions and SHAP outputs
   explain model behavior
 - ✅ **Operational forecasting:** chronological occupied-bed evaluation and a
