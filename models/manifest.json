@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at_utc": "2026-07-28T14:18:39.717217+00:00",
+  "generated_at_utc": "2026-07-31T05:27:05.289488+00:00",
   "dataset": {
     "path": "datasets\\processed\\model_features.csv",
     "sha256": "cb3515c64631f6530b765e5f65a99dbfc8b67bf6d97b6c0cec26b17a22349312",
@@ -46,7 +46,7 @@
       "sha256": "62c50f862edba1dc1097d79077f18135e762b612c3c6d1a7544fe807393062dd",
       "selected_model": "random_forest",
       "primary_metric": "RMSE",
-      "primary_metric_value": 0.07390335178493618,
+      "primary_metric_value": 0.07390335178493619,
       "features": [
         "charlson_index",
         "previous_admissions",
@@ -68,7 +68,7 @@
     },
     "revenue_scenario": {
       "artifact": "revenue.pkl",
-      "sha256": "b390fc39926ce05c2a25ac6f36e962b6bfe57c6f7249233f140cd480a6998d45",
+      "sha256": "f885982129864b9047908af2c2494235c43aab869fb4824b3dd9a5c9327638f5",
       "selected_model": "catboost",
       "primary_metric": "RMSE",
       "primary_metric_value": 2890.7874384806514,
@@ -126,7 +126,7 @@
       "report_sha256": "8b97c7f5ab69340fcd0b9e41991342b7c1d956667b5fc9aaf54091270a18f6be"
     },
     "revenue_scenario": {
-      "model_sha256": "b390fc39926ce05c2a25ac6f36e962b6bfe57c6f7249233f140cd480a6998d45",
+      "model_sha256": "f885982129864b9047908af2c2494235c43aab869fb4824b3dd9a5c9327638f5",
       "report": "revenue_shap_importance.csv",
       "report_sha256": "0e32190cc74a968422df37fbe581b9d8b7af98de79525deb1c7f6d3f4d16d88c"
     }

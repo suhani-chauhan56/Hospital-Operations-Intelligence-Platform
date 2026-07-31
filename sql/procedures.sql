@@ -1,10 +1,15 @@
 USE hospital_ops;
 
 DROP PROCEDURE IF EXISTS sp_monthly_operations_report;
+
 DROP PROCEDURE IF EXISTS sp_patient_360;
+
 DROP PROCEDURE IF EXISTS sp_command_center_report;
+
 DROP TRIGGER IF EXISTS trg_billing_gap_before_insert;
+
 DROP TRIGGER IF EXISTS trg_billing_gap_before_update;
+
 DROP TRIGGER IF EXISTS trg_claim_approval_before_insert;
 
 DELIMITER $$
@@ -79,4 +84,4 @@ BEGIN
     END;
 END$$
 
-DELIMITER ;
+DELIMITER;
