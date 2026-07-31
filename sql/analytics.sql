@@ -566,8 +566,7 @@ GROUP BY
 ORDER BY x.flow_date;
 
 -- 61 Hospital command center snapshot
-SELECT *
-FROM vw_command_center;
+SELECT * FROM vw_command_center;
 
 -- 62 Department efficiency ranking
 SELECT
@@ -578,7 +577,8 @@ SELECT
     patient_flow_score,
     efficiency_rank
 FROM vw_efficiency_ranking
-WHERE scope_type = 'department'
+WHERE
+    scope_type = 'department'
 ORDER BY efficiency_rank;
 
 -- 63 Next-week emergency forecast
@@ -594,7 +594,7 @@ ORDER BY forecast_date;
 SELECT
     priority,
     title,
-    signal,
+    `signal`,
     action,
     owner,
     timeframe,
@@ -610,26 +610,18 @@ SELECT
     component,
     score
 FROM (
-    SELECT
-        scope_type,
-        scope_name,
-        'Patient outcomes' AS component,
-        patient_outcome_score AS score
-    FROM hospital_efficiency_scores
-    UNION ALL
-    SELECT
-        scope_type,
-        scope_name,
-        'Capacity balance',
-        capacity_balance_score
-    FROM hospital_efficiency_scores
-    UNION ALL
-    SELECT
-        scope_type,
-        scope_name,
-        'Patient flow',
-        patient_flow_score
-    FROM hospital_efficiency_scores
-) components
-WHERE score < 70
+        SELECT
+            scope_type, scope_name, 'Patient outcomes' AS component, patient_outcome_score AS score
+        FROM hospital_efficiency_scores
+        UNION ALL
+        SELECT
+            scope_type, scope_name, 'Capacity balance', capacity_balance_score
+        FROM hospital_efficiency_scores
+        UNION ALL
+        SELECT
+            scope_type, scope_name, 'Patient flow', patient_flow_score
+        FROM hospital_efficiency_scores
+    ) components
+WHERE
+    score < 70
 ORDER BY score;
