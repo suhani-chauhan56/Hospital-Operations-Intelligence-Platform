@@ -50,5 +50,6 @@ datasets/processed/*
 !reports/emergency_forecast.csv
 !reports/operational_forecast_summary.csv
 !reports/operational_recommendations.csv
+!reports/executive_action_plan.csv
 !reports/executive_report.pdf
 !reports/mysql_deployment_status.json

@@ -1,0 +1,5 @@
+priority,action,owner,timeframe,success_measure,evidence
+P1,Prioritize ICU discharge review and post-discharge follow-up.,Clinical Quality Lead,30 days,Root-cause review completed and approved ward target set,11.8% hospital-wide readmission
+P1,Review payer-specific billed-to-paid gaps and aged claims.,Revenue Cycle Manager,30 days,Collection rate monitored against illustrative 70% threshold,64.5% of billed value collected
+P2,"Capture arrival, triage, and service-start timestamps before staffing optimization.",Operations Data Owner,60 days,Observed queue timestamps pass completeness checks,50 minute simulated emergency wait
+P2,Replace surrogate claim links and derived master data,Data Governance Lead,90 days,"Governed encounter, provider, department, and patient keys",Source files have no shared encounter key
