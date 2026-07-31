@@ -43,6 +43,11 @@ def test_prediction_forms_execute():
                 "Why this risk level?" in markdown.value
                 for markdown in app.markdown
             )
+            assert any(
+                "log-odds" in markdown.value
+                and "Patient value:" in markdown.value
+                for markdown in app.markdown
+            )
 
 
 def test_executive_report_refreshes():

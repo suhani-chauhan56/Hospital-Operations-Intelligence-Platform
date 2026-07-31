@@ -998,26 +998,124 @@ def risk_gauge(probability: float, title: str) -> go.Figure:
     )
 
 
-def local_risk_drivers(model, row: pd.DataFrame, top_n: int = 4) -> pd.DataFrame:
+RISK_FEATURE_LABELS = {
+    "los_days": "Length of stay",
+    "num_procedures": "Procedure count",
+    "charlson_index": "Charlson comorbidity index",
+    "hba1c": "HbA1c",
+    "creatinine": "Creatinine",
+    "haemoglobin": "Haemoglobin",
+    "systolic_bp": "Systolic blood pressure",
+    "previous_admissions": "Previous admissions",
+    "readmission_history": "Readmission history",
+    "disease_severity_score": "Disease severity score",
+    "lab_abnormality_score": "Abnormal lab indicators",
+    "patient_complexity_index": "Patient complexity index",
+    "admit_type": "Admission type",
+    "ward_type": "Ward type",
+    "season": "Admission season",
+}
+
+
+def risk_feature_value(
+    source_feature: str,
+    category: str | None,
+    row: pd.DataFrame,
+) -> str:
+    if category is not None:
+        return category
+    value = row.iloc[0][source_feature]
+    if source_feature == "los_days":
+        return f"{float(value):.0f} days"
+    if source_feature == "systolic_bp":
+        return f"{float(value):.0f} mmHg"
+    if source_feature in {
+        "num_procedures",
+        "previous_admissions",
+        "readmission_history",
+        "lab_abnormality_score",
+    }:
+        return f"{float(value):.0f}"
+    return f"{float(value):.2f}"
+
+
+def local_risk_drivers(
+    model,
+    row: pd.DataFrame,
+    top_n: int = 4,
+) -> pd.DataFrame:
     prep = model.named_steps["prep"]
     estimator = model.named_steps["model"]
     transformed = prep.transform(row[model_columns(model)])
-    values = transformed.toarray()[0] if hasattr(transformed, "toarray") else np.asarray(transformed)[0]
+    values = (
+        transformed.toarray()[0]
+        if hasattr(transformed, "toarray")
+        else np.asarray(transformed)[0]
+    )
     contributions = values * estimator.coef_[0]
     names = prep.get_feature_names_out()
     drivers = pd.DataFrame(
-        {"feature": names, "contribution": contributions}
+        {
+            "transformed_feature": names,
+            "contribution": contributions,
+        }
     )
-    drivers = drivers[drivers["contribution"] > 0].nlargest(
-        top_n,
-        "contribution",
+    drivers = (
+        drivers[drivers["contribution"].abs() > 1e-12]
+        .assign(absolute_contribution=lambda frame: frame["contribution"].abs())
+        .nlargest(top_n, "absolute_contribution")
     )
-    drivers["feature"] = (
-        drivers["feature"]
-        .str.replace("numeric__", "", regex=False)
-        .str.replace("categorical__", "", regex=False)
-        .str.replace("_", " ")
-        .str.title()
+    categorical_columns = {
+        column
+        for column in model_columns(model)
+        if not pd.api.types.is_numeric_dtype(row[column])
+    }
+    metadata = []
+    for transformed_name in drivers["transformed_feature"]:
+        if transformed_name.startswith("numeric__"):
+            source_feature = transformed_name.removeprefix("numeric__")
+            category = None
+        else:
+            encoded = transformed_name.removeprefix("categorical__")
+            source_feature = next(
+                (
+                    column
+                    for column in categorical_columns
+                    if encoded.startswith(f"{column}_")
+                ),
+                encoded,
+            )
+            category = (
+                encoded.removeprefix(f"{source_feature}_")
+                if source_feature != encoded
+                else None
+            )
+        metadata.append(
+            {
+                "feature": RISK_FEATURE_LABELS.get(
+                    source_feature,
+                    source_feature.replace("_", " ").title(),
+                ),
+                "observed_value": risk_feature_value(
+                    source_feature,
+                    category,
+                    row,
+                ),
+            }
+        )
+    drivers = pd.concat(
+        [drivers.reset_index(drop=True), pd.DataFrame(metadata)],
+        axis=1,
+    )
+    drivers["direction"] = np.where(
+        drivers["contribution"] > 0,
+        "Raises model score",
+        "Lowers model score",
+    )
+    drivers["icon"] = np.where(
+        drivers["contribution"] > 0,
+        "trending_up",
+        "trending_down",
     )
     return drivers
 
@@ -2259,7 +2357,7 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
                 section_title("Why this risk level?")
                 if drivers.empty:
                     st.info(
-                        "No positive model contributions were identified for this scenario."
+                        "No non-zero model contributions were identified for this scenario."
                     )
                 else:
                     driver_columns = st.columns(len(drivers))
@@ -2271,16 +2369,19 @@ def predictions_page(data: dict[str, pd.DataFrame]) -> None:
                             st.markdown(
                                 f"""
                                 <div class="experience-item">
-                                    <span class="material-symbols-rounded">priority_high</span>
+                                    <span class="material-symbols-rounded">{escape(str(driver.icon))}</span>
                                     <strong>{escape(str(driver.feature))}</strong>
-                                    <small>Positive model contribution {driver.contribution:.3f}</small>
+                                    <small>Patient value: {escape(str(driver.observed_value))}</small><br>
+                                    <small>{escape(str(driver.direction))}: {driver.contribution:+.3f} log-odds</small>
                                 </div>
                                 """,
                                 unsafe_allow_html=True,
                             )
                 st.caption(
-                    "Reasons are calculated from the registered logistic-regression pipeline for this input. "
-                    "They explain model behavior and are not clinical diagnoses."
+                    "Cards show the four largest absolute contributions from the registered "
+                    "logistic-regression pipeline. Up raises and down lowers the model score; "
+                    "the probability also includes every other feature and the learned intercept. "
+                    "These values explain model behavior and are not clinical diagnoses."
                 )
     with tab_wait:
         if waiting_model is None:

@@ -7,7 +7,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Live_App-FF4B4B?logo=streamlit&logoColor=white)](https://hospital-operations-intelligence-platform-hvnncsycljark8qxv7b8.streamlit.app/)
 [![SQL](https://img.shields.io/badge/SQL-65_Analyses-146C6E)](sql/analytics.sql)
-[![Tests](https://img.shields.io/badge/Tests-10_Passing-28A745)](#-quality-and-governance)
+[![Tests](https://img.shields.io/badge/Tests-11_Passing-28A745)](#-quality-and-governance)
 [![License](https://img.shields.io/badge/License-MIT-0F4C81)](LICENSE)
 
 [![Open Live Dashboard](https://img.shields.io/badge/Open_Live_Dashboard-Launch-0F4C81?style=for-the-badge&logo=streamlit&logoColor=white)](https://hospital-operations-intelligence-platform-hvnncsycljark8qxv7b8.streamlit.app/)
@@ -20,7 +20,7 @@
 | **120,000 admissions** | **4 ML workflows** | **12-page Streamlit app** |
 | **64,873 patients** | **5 governed marts** | **5-page executive PDF** |
 | **70,000 claims** | **65 SQL analyses** | **Power BI implementation assets** |
-| **12 core SQL tables** | **SHAP explanations** | **33 contracts + 10 tests** |
+| **12 core SQL tables** | **SHAP explanations** | **33 contracts + 11 tests** |
 
 **What makes this more than a dashboard:** raw data is validated, transformed
 into relational and ML-ready datasets, scored through registered pipelines,
@@ -207,7 +207,7 @@ Detailed execution and troubleshooting are in the [runbook](docs/RUNBOOK.md).
 ## ✅ Quality and Governance
 
 - **33 project contracts** validate tables, keys, dates, provenance, models, reports, forecasts, and cross-mart consistency
-- **10 automated tests** cover artifacts, SHAP lineage, Streamlit routes, predictions, assistant behavior, and PDF regeneration
+- **11 automated tests** cover artifacts, SHAP lineage, probability decomposition, Streamlit routes, predictions, assistant behavior, and PDF regeneration
 - **Zero patient overlap** between readmission train and test cohorts
 - **Current screenshots:** nine routes captured with zero Streamlit exceptions and zero browser console errors
 
@@ -216,7 +216,7 @@ python src\validate_project.py
 python -m pytest -q
 ```
 
-Expected: `33 table and model contracts` and `10 passed`.
+Expected: `33 table and model contracts` and `11 passed`.
 
 ## ⚠️ Responsible Use
 

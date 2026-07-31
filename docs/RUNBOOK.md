@@ -122,7 +122,7 @@ Expected:
 
 ```text
 Project validation passed: 33 table and model contracts.
-10 passed
+11 passed
 ```
 
 ## 6. Notebook Workflow

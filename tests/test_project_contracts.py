@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import joblib
+import numpy as np
 import pandas as pd
 
 
@@ -133,3 +135,21 @@ def test_operational_intelligence_marts_are_consistent():
         "DROP TRIGGER IF EXISTS trg_billing_gap_before_insert;"
         in procedures_sql
     )
+
+
+def test_readmission_probability_decomposition_is_exact():
+    model = joblib.load(ROOT / "models" / "readmission.pkl")
+    columns = list(model.named_steps["prep"].feature_names_in_)
+    features = pd.read_csv(
+        ROOT / "datasets" / "processed" / "model_features.csv",
+        nrows=64,
+    )
+    transformed = model.named_steps["prep"].transform(features[columns])
+    estimator = model.named_steps["model"]
+    logits = (
+        np.asarray(transformed @ estimator.coef_[0]).ravel()
+        + float(estimator.intercept_[0])
+    )
+    reconstructed = 1 / (1 + np.exp(-logits))
+    predicted = model.predict_proba(features[columns])[:, 1]
+    assert np.allclose(reconstructed, predicted, atol=1e-12)
